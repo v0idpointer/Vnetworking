@@ -159,6 +159,7 @@
     <ClCompile Include="src\Http\HttpMethod.cpp" />
     <ClCompile Include="src\Http\HttpStatusCode.cpp" />
     <ClCompile Include="src\Http\HttpVersion.cpp" />
+    <ClCompile Include="src\Uri.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
