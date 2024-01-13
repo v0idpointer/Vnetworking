@@ -9,7 +9,7 @@ using namespace Vnetworking;
 Uri::Uri(const std::string& uriString) {
 	
 	if (uriString.length() >= 32768)
-		throw std::runtime_error("URI too long.");
+		throw std::length_error("URI too long.");
 
 	// check if the uri contains invalid character(s):
 	std::string::const_iterator it = std::find_if(uriString.begin(), uriString.end(), [&] (const char ch) -> bool {
@@ -29,11 +29,11 @@ Uri::Uri(const std::string& uriString) {
 	});
 	
 	if (it != uriString.end())
-		throw std::runtime_error("URI contains invalid character(s).");
+		throw std::invalid_argument("URI contains invalid character(s).");
 
 	// parse the scheme:
 	if (uriString.find(':') == std::string::npos)
-		throw std::runtime_error("Bad URI.");
+		throw std::invalid_argument("URI scheme missing.");
 
 	std::string scheme = uriString.substr(0, uriString.find(':'));
 	it = std::find_if(scheme.begin(), scheme.end(), [&] (const char ch) -> bool {
@@ -41,8 +41,8 @@ Uri::Uri(const std::string& uriString) {
 		return true;
 	});
 
-	if (scheme.empty()) throw std::runtime_error("Bad URI: scheme is an empty string.");
-	if (it != scheme.end()) throw std::runtime_error("Bad URI: scheme contains invalid character(s).");
+	if (scheme.empty()) throw std::invalid_argument("URI scheme cannot be an empty string.");
+	if (it != scheme.end()) throw std::invalid_argument("URI scheme contains invalid character(s).");
 	this->m_scheme = scheme;
 
 	// parse the user info, host, port and path:
@@ -67,7 +67,7 @@ Uri::Uri(const std::string& uriString) {
 			authority = authority.substr(0, authority.find(':'));
 		}
 
-		if (authority.empty()) throw std::runtime_error("Bad URI: host is an empty string.");
+		if (authority.empty()) throw std::invalid_argument("URI host cannot be an empty string.");
 		this->m_host = authority;
 
 		if (port) {
@@ -75,7 +75,7 @@ Uri::Uri(const std::string& uriString) {
 			it = std::find_if(port.value().begin(), port.value().end(), [&] (const char ch) -> bool {
 				return (!std::isdigit(ch));
 			});
-			if (it != port.value().end()) throw std::runtime_error("Bad URI: non-numerical port.");
+			if (it != port.value().end()) throw std::invalid_argument("URI port cannot be a non-numerical value.");
 
 			std::uint16_t portNum = static_cast<std::uint16_t>(std::strtoul(port.value().c_str(), nullptr, 0));
 			this->m_port = portNum;
