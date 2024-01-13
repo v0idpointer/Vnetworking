@@ -43,6 +43,10 @@ Uri::Uri(const std::string& uriString) {
 
 	if (scheme.empty()) throw std::invalid_argument("URI scheme cannot be an empty string.");
 	if (it != scheme.end()) throw std::invalid_argument("URI scheme contains invalid character(s).");
+	std::transform(scheme.begin(), scheme.end(), scheme.begin(), [&] (const char ch) -> char {
+		return std::tolower(ch);
+	});
+
 	this->m_scheme = scheme;
 
 	// parse the user info, host, port and path:
@@ -68,6 +72,10 @@ Uri::Uri(const std::string& uriString) {
 		}
 
 		if (authority.empty()) throw std::invalid_argument("URI host cannot be an empty string.");
+		std::transform(authority.begin(), authority.end(), authority.begin(), [&] (const char ch) -> char {
+			return std::tolower(ch);
+		});
+
 		this->m_host = authority;
 
 		if (port) {
