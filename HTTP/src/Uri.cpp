@@ -92,11 +92,21 @@ Uri::Uri(const std::string& uriString) {
 
 	}
 
+	if (path.empty() && !this->m_host.has_value()) 
+		throw std::invalid_argument("URI path component missing.");
+
 	std::string tmp = path; // store the original path (with query string and/or fragment) for later
-	if (path.empty()) path = "/";
 	if (path.find('?') != std::string::npos) path = path.substr(0, path.find('?'));
 	if (path.find('#') != std::string::npos) path = path.substr(0, path.find('#'));
 	while (path.starts_with("//")) path = path.substr(1);
+	while (path.ends_with('/')) path = path.substr(0, (path.length() - 1));
+
+	std::size_t pos = 0;
+	while ((pos = path.find("//", pos)) != std::string::npos) 
+		path.replace(pos, 2, "/");
+
+	if (path.empty()) path = "/";
+	else if (path[0] != '/') path = ("/" + path);
 
 	this->m_path = path;
 
