@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
+#include <sstream>
 
 using namespace Vnetworking;
 
@@ -202,4 +203,37 @@ std::optional<std::string> Uri::GetQuery() const {
 
 std::optional<std::string> Uri::GetFragment() const {
 	return this->m_fragment;
+}
+
+std::string Uri::ToString() const {
+
+	std::ostringstream stream;
+
+	if (this->m_scheme)
+		stream << this->m_scheme.value() << ":";
+
+	if (this->m_host) {
+
+		stream << "//";
+
+		if (this->m_userInfo)
+			stream << this->m_userInfo.value() << "@";
+
+		stream << this->m_host.value();
+
+		if (this->m_port)
+			stream << ":" << this->m_port.value();
+
+	}
+
+	if (this->m_path)
+		stream << this->m_path.value();
+
+	if (this->m_query)
+		stream << "?" << this->m_query.value();
+
+	if (this->m_fragment)
+		stream << "#" << this->m_fragment.value();
+
+	return (stream.str());
 }

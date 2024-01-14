@@ -42,6 +42,8 @@ namespace Vnetworking {
 		std::optional<std::string> GetPath(void) const;
 		std::optional<std::string> GetQuery(void) const;
 		std::optional<std::string> GetFragment(void) const;
+
+		std::string ToString(void) const;
 	
 	};
 
