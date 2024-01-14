@@ -56,6 +56,9 @@ Uri::Uri(const std::string& uriString) {
 		std::string authority = path.substr(2);
 		if (authority.find('/') != std::string::npos) 
 			authority = authority.substr(0, authority.find('/'));
+		else
+			authority = authority.substr(0, std::min(authority.find('?'), authority.find('#')));
+
 		path = path.substr(authority.length() + 2);
 	
 		std::optional<std::string> userInfo;
@@ -122,8 +125,6 @@ Uri::Uri(const std::string& uriString) {
 		if (!fragment.empty()) this->m_fragment = fragment;
 	}
 
-	this->m_uriString = uriString;
-
 }
 
 Uri::Uri(const Uri& uri) {
@@ -138,7 +139,6 @@ Uri::~Uri() { }
 
 Uri& Uri::operator= (const Uri& uri) {
 	
-	this->m_uriString = uri.m_uriString;
 	this->m_scheme = uri.m_scheme;
 	this->m_userInfo = uri.m_userInfo;
 	this->m_host = uri.m_host;
@@ -152,7 +152,6 @@ Uri& Uri::operator= (const Uri& uri) {
 
 Uri& Uri::operator= (Uri&& uri) noexcept {
 	
-	this->m_uriString = std::move(uri.m_uriString);
 	this->m_scheme = std::move(uri.m_scheme);
 	this->m_userInfo = std::move(uri.m_userInfo);
 	this->m_host = std::move(uri.m_host);
@@ -165,7 +164,16 @@ Uri& Uri::operator= (Uri&& uri) noexcept {
 }
 
 bool Uri::operator== (const Uri& uri) const {
-	return (this->m_uriString == uri.m_uriString);
+	
+	if (this->m_scheme != uri.m_scheme) return false;
+	if (this->m_userInfo != uri.m_userInfo) return false;
+	if (this->m_host != uri.m_host) return false;
+	if (this->m_port != uri.m_port) return false;
+	if (this->m_path != uri.m_path) return false;
+	if (this->m_query != uri.m_query) return false;
+	if (this->m_fragment != uri.m_fragment) return false;
+
+	return true;
 }
 
 std::optional<std::string> Uri::GetScheme() const {

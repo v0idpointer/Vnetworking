@@ -17,7 +17,6 @@ namespace Vnetworking {
 	class VNETHTTPAPI Uri { 
 	
 	private:
-		std::string m_uriString;
 		std::optional<std::string> m_scheme;
 		std::optional<std::string> m_userInfo;
 		std::optional<std::string> m_host;
