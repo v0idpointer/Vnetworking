@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="src\DllMain.cpp" />
     <ClCompile Include="src\Http\HttpMethod.cpp" />
+    <ClCompile Include="src\Http\HttpRequest.cpp" />
     <ClCompile Include="src\Http\HttpStatusCode.cpp" />
     <ClCompile Include="src\Http\HttpVersion.cpp" />
     <ClCompile Include="src\Uri.cpp" />
