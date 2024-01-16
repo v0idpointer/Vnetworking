@@ -27,6 +27,7 @@ HttpRequest& HttpRequest::operator= (const HttpRequest& httpRequest) {
 	this->m_version = httpRequest.m_version;
 	this->m_method = httpRequest.m_method;
 	this->m_requestUri = httpRequest.m_requestUri;
+	this->m_headers = httpRequest.m_headers;
 	this->m_payload = httpRequest.m_payload;
 
 	return static_cast<HttpRequest&>(*this);
@@ -37,6 +38,7 @@ HttpRequest& HttpRequest::operator= (HttpRequest&& httpRequest) noexcept {
 	this->m_version = std::move(httpRequest.m_version);
 	this->m_method = std::move(httpRequest.m_method);
 	this->m_requestUri = std::move(httpRequest.m_requestUri);
+	this->m_headers = std::move(httpRequest.m_headers);
 	this->m_payload = std::move(httpRequest.m_payload);
 
 	return static_cast<HttpRequest&>(*this);
@@ -47,6 +49,7 @@ bool HttpRequest::operator== (const HttpRequest& httpRequest) const {
 	if (this->m_version != httpRequest.m_version) return false;
 	if (this->m_method != httpRequest.m_method) return false;
 	if (this->m_requestUri != httpRequest.m_requestUri) return false;
+	if (this->m_headers != httpRequest.m_headers) return false;
 	if (this->m_payload != httpRequest.m_payload) return false;
 
 	return true;
@@ -62,6 +65,14 @@ HttpMethod HttpRequest::GetMethod() const {
 
 const Uri& HttpRequest::GetRequestUri() const {
 	return this->m_requestUri;
+}
+
+const HttpHeaders& HttpRequest::GetHeaders() const {
+	return this->m_headers;
+}
+
+HttpHeaders& HttpRequest::GetHeaders() {
+	return this->m_headers;
 }
 
 const std::vector<std::uint8_t>& HttpRequest::GetPayload() const {
@@ -82,6 +93,10 @@ void HttpRequest::SetMethod(const HttpMethod method) {
 
 void HttpRequest::SetRequestUri(const Uri& requestUri) {
 	this->m_requestUri = requestUri;
+}
+
+void HttpRequest::SetHeaders(const HttpHeaders& httpHeaders) {
+	this->m_headers = httpHeaders;
 }
 
 void HttpRequest::SetPayload(const std::vector<std::uint8_t>& payload) {

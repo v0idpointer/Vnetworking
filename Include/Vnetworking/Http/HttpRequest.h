@@ -23,7 +23,7 @@ namespace Vnetworking::Http {
 		HttpVersion m_version;
 		HttpMethod m_method;
 		Uri m_requestUri;
-		// m_headers;
+		HttpHeaders m_headers;
 		std::vector<std::uint8_t> m_payload;
 
 	public:
@@ -41,14 +41,15 @@ namespace Vnetworking::Http {
 		HttpVersion GetVersion(void) const;
 		HttpMethod GetMethod(void) const;
 		const Uri& GetRequestUri(void) const;
-		// get headers
+		const HttpHeaders& GetHeaders(void) const;
+		HttpHeaders& GetHeaders(void);
 		const std::vector<std::uint8_t>& GetPayload(void) const;
 		std::vector<std::uint8_t>& GetPayload(void);
 
 		void SetVersion(const HttpVersion version);
 		void SetMethod(const HttpMethod method);
 		void SetRequestUri(const Uri& requestUri);
-		// set headers
+		void SetHeaders(const HttpHeaders& httpHeaders);
 		void SetPayload(const std::vector<std::uint8_t>& payload);
 		void SetPayload(std::vector<std::uint8_t>&& payload) noexcept;
 		void DeletePayload(void);
