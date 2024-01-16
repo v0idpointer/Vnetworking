@@ -54,6 +54,9 @@ namespace Vnetworking::Http {
 		void SetPayload(std::vector<std::uint8_t>&& payload) noexcept;
 		void DeletePayload(void);
 
+		// static HttpRequest Parse(const std::vector<std::uint8_t>& data);
+		static std::vector<std::uint8_t> Serialize(const HttpRequest& httpRequest);
+
 	};
 
 }

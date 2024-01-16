@@ -1,5 +1,10 @@
 #include <Vnetworking/Http/HttpRequest.h>
 
+#include <sstream>
+#include <algorithm>
+#include <exception>
+#include <stdexcept>
+
 using namespace Vnetworking;
 using namespace Vnetworking::Http;
 
@@ -109,4 +114,34 @@ void HttpRequest::SetPayload(std::vector<std::uint8_t>&& payload) noexcept {
 
 void HttpRequest::DeletePayload() {
 	this->m_payload = { };
+}
+
+std::vector<std::uint8_t> HttpRequest::Serialize(const HttpRequest& httpRequest) {
+
+	if (!((httpRequest.GetVersion() == HttpVersion::HTTP_1_0) || (httpRequest.GetVersion() == HttpVersion::HTTP_1_1)))
+		throw std::runtime_error("Cannot serialize HTTP request: unsupported HTTP version.");
+
+	std::ostringstream stream;
+
+	stream << ToString(httpRequest.GetMethod()) << " ";
+	stream << httpRequest.GetRequestUri().GetPath().value();
+	if (httpRequest.GetRequestUri().GetQuery().has_value())
+		stream << "?" << httpRequest.GetRequestUri().GetQuery().value();
+	stream << " " << ToString(httpRequest.GetVersion()) << "\r\n";
+
+	std::vector<std::pair<std::string, std::string>> headers = { httpRequest.GetHeaders().Begin(), httpRequest.GetHeaders().End() };
+	std::sort(headers.begin(), headers.end());
+	for (const auto& [name, value] : headers)
+		stream << name << ": " << value << "\r\n";
+
+	stream << "\r\n";
+	for (const std::uint8_t byte : httpRequest.GetPayload())
+		stream << (char)(byte);
+
+	const std::string str = (stream.str());
+	std::vector<std::uint8_t> data(str.size());
+	for (std::size_t i = 0; i < str.length(); ++i)
+		data[i] = str[i];
+
+	return data;
 }
