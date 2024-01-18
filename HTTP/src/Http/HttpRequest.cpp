@@ -116,10 +116,123 @@ void HttpRequest::DeletePayload() {
 	this->m_payload = { };
 }
 
+HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
+
+	if (!((version == HttpVersion::HTTP_1_0) || (version == HttpVersion::HTTP_1_1)))
+		throw std::invalid_argument("Cannot parse HTTP request: unsupported HTTP version.");
+
+	HttpRequest httpRequest;
+
+	// convert the byte buffer into a string:
+	std::string_view reqstr = { reinterpret_cast<const char*>(data.data()), data.size() };
+
+	// parse the first line of the request (contains method, path and version):
+
+	std::size_t requestLineEnd = reqstr.find("\r\n");
+	if (requestLineEnd == std::string_view::npos)
+		throw std::runtime_error("Bad HTTP request.");
+
+	const std::size_t methodEnd = reqstr.find(' ');
+	if ((methodEnd == std::string_view::npos) || (methodEnd >= requestLineEnd))
+		throw std::runtime_error("Bad HTTP request.");
+
+	// set http method. if the method is not valid, throw an exception:
+	const std::string_view methodStr = reqstr.substr(0, methodEnd);
+	const std::vector<HttpMethod> methods = {
+		HttpMethod::GET, HttpMethod::HEAD, HttpMethod::POST, HttpMethod::PUT, HttpMethod::DELETE,
+		HttpMethod::CONNECT, HttpMethod::OPTIONS, HttpMethod::TRACE, HttpMethod::PATCH, HttpMethod(0xFFFF),
+	};
+
+	for (const HttpMethod method : methods) {
+		
+		if (static_cast<std::uint16_t>(method) == 0xFFFF) 
+			throw std::runtime_error("Bad HTTP request: invalid and/or unsupported HTTP method.");
+
+		if (ToString(method) == methodStr) {
+			httpRequest.SetMethod(method);
+			break;
+		}
+
+	}
+
+	reqstr = reqstr.substr(methodEnd + 1);
+	requestLineEnd -= ToString(httpRequest.GetMethod()).length();
+
+	// set the request uri:
+	const std::size_t pathEnd = reqstr.find(' ');
+	if ((pathEnd == std::string_view::npos) || (pathEnd >= requestLineEnd))
+		throw std::runtime_error("Bad HTTP request.");
+
+	std::string_view path = reqstr.substr(0, pathEnd);
+	path = path.substr(path.find('/'));
+	try {
+		const Uri requestUri = { ("http:" + std::string(path)) };
+		httpRequest.SetRequestUri(requestUri);
+	}
+	catch (const std::invalid_argument& ex) {
+		std::ostringstream stream;
+		stream << "Bad HTTP request: bad request URI: " << ex.what();
+		throw std::runtime_error(stream.str());
+	}
+	catch (const std::length_error&) {
+		throw std::runtime_error("Bad HTTP request: request URI too long.");
+	}
+
+	path = reqstr.substr(0, pathEnd);
+	reqstr = reqstr.substr(pathEnd + 1);
+	requestLineEnd -= (path.length() + 1);
+
+	// check if the http version is 1.1 or 1.0:
+	const std::size_t versionEnd = (requestLineEnd - 1);
+	const std::string_view versionStr = reqstr.substr(0, versionEnd);
+	if (!((versionStr == "HTTP/1.0") || (versionStr == "HTTP/1.1")))
+		throw std::runtime_error("Bad HTTP request: unsupported HTTP version.");
+
+	httpRequest.SetVersion((versionStr == "HTTP/1.1") ? HttpVersion::HTTP_1_1 : HttpVersion::HTTP_1_0);
+
+	reqstr = reqstr.substr(versionEnd + 2);
+
+	// parse http headers:
+	
+	// if the request string is empty, it means the request has no headers & no payload:
+	if (reqstr.empty()) return httpRequest;
+	
+	// parse headers until the line containing CRLF is reached.
+	bool headerParsing = ( !reqstr.substr(0, reqstr.find("\r\n")).empty() );
+	while (headerParsing) {
+		
+		const std::string_view headerField = reqstr.substr(0, reqstr.find("\r\n"));
+		
+		const std::size_t cln = headerField.find(": ");
+		if (cln == std::string_view::npos)
+			throw std::runtime_error("bad http request");
+
+		const std::string headerName(headerField.substr(0, cln));
+		const std::string headerValue(headerField.substr(cln + 2));
+		httpRequest.GetHeaders().AddHeader(headerName, headerValue);
+
+		reqstr = reqstr.substr(reqstr.find("\r\n") + 2);
+		headerParsing = (!reqstr.substr(0, reqstr.find("\r\n")).empty());
+		
+	}
+
+	reqstr = reqstr.substr(2);
+
+	// if the request string is empty, it means request has no payload data:
+	if (reqstr.empty()) return httpRequest;
+
+	// copy the payload:
+	std::vector<std::uint8_t> payload(reqstr.length());
+	memcpy_s(payload.data(), payload.size(), reqstr.data(), reqstr.length());
+	httpRequest.SetPayload(std::move(payload));
+
+	return httpRequest;
+}
+
 std::vector<std::uint8_t> HttpRequest::Serialize(const HttpRequest& httpRequest) {
 
 	if (!((httpRequest.GetVersion() == HttpVersion::HTTP_1_0) || (httpRequest.GetVersion() == HttpVersion::HTTP_1_1)))
-		throw std::runtime_error("Cannot serialize HTTP request: unsupported HTTP version.");
+		throw std::invalid_argument("Cannot serialize HTTP request: unsupported HTTP version.");
 
 	std::ostringstream stream;
 
