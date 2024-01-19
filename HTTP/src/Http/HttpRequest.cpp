@@ -1,9 +1,9 @@
 #include <Vnetworking/Http/HttpRequest.h>
+#include <Vnetworking/Http/HttpException.h>
 
+#include <format>
 #include <sstream>
 #include <algorithm>
-#include <exception>
-#include <stdexcept>
 
 using namespace Vnetworking;
 using namespace Vnetworking::Http;
@@ -119,7 +119,7 @@ void HttpRequest::DeletePayload() {
 HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
 
 	if (!((version == HttpVersion::HTTP_1_0) || (version == HttpVersion::HTTP_1_1)))
-		throw std::invalid_argument("Cannot parse HTTP request: unsupported HTTP version.");
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
 
 	HttpRequest httpRequest;
 
@@ -130,11 +130,11 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 
 	std::size_t requestLineEnd = reqstr.find("\r\n");
 	if (requestLineEnd == std::string_view::npos)
-		throw std::runtime_error("Bad HTTP request.");
+		throw HttpException(HttpStatusCode::BAD_REQUEST);
 
 	const std::size_t methodEnd = reqstr.find(' ');
 	if ((methodEnd == std::string_view::npos) || (methodEnd >= requestLineEnd))
-		throw std::runtime_error("Bad HTTP request.");
+		throw HttpException(HttpStatusCode::BAD_REQUEST);
 
 	// set http method. if the method is not valid, throw an exception:
 	const std::string_view methodStr = reqstr.substr(0, methodEnd);
@@ -145,8 +145,8 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 
 	for (const HttpMethod method : methods) {
 		
-		if (static_cast<std::uint16_t>(method) == 0xFFFF) 
-			throw std::runtime_error("Bad HTTP request: invalid and/or unsupported HTTP method.");
+		if (static_cast<std::uint16_t>(method) == 0xFFFF)
+			throw HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, "Invalid and/or unsupported HTTP method.");
 
 		if (ToString(method) == methodStr) {
 			httpRequest.SetMethod(method);
@@ -161,7 +161,7 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	// set the request uri:
 	const std::size_t pathEnd = reqstr.find(' ');
 	if ((pathEnd == std::string_view::npos) || (pathEnd >= requestLineEnd))
-		throw std::runtime_error("Bad HTTP request.");
+		throw HttpException(HttpStatusCode::BAD_REQUEST);
 
 	std::string_view path = reqstr.substr(0, pathEnd);
 	path = path.substr(path.find('/'));
@@ -170,12 +170,10 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 		httpRequest.SetRequestUri(requestUri);
 	}
 	catch (const std::invalid_argument& ex) {
-		std::ostringstream stream;
-		stream << "Bad HTTP request: bad request URI: " << ex.what();
-		throw std::runtime_error(stream.str());
+		throw HttpException(HttpStatusCode::BAD_REQUEST, std::format("Bad request URI: {0}", ex.what()));
 	}
 	catch (const std::length_error&) {
-		throw std::runtime_error("Bad HTTP request: request URI too long.");
+		throw HttpException(HttpStatusCode::URI_TOO_LONG, "Request URI too long.");
 	}
 
 	path = reqstr.substr(0, pathEnd);
@@ -186,7 +184,7 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	const std::size_t versionEnd = (requestLineEnd - 1);
 	const std::string_view versionStr = reqstr.substr(0, versionEnd);
 	if (!((versionStr == "HTTP/1.0") || (versionStr == "HTTP/1.1")))
-		throw std::runtime_error("Bad HTTP request: unsupported HTTP version.");
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
 
 	httpRequest.SetVersion((versionStr == "HTTP/1.1") ? HttpVersion::HTTP_1_1 : HttpVersion::HTTP_1_0);
 
@@ -205,7 +203,7 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 		
 		const std::size_t cln = headerField.find(": ");
 		if (cln == std::string_view::npos)
-			throw std::runtime_error("bad http request");
+			throw HttpException(HttpStatusCode::BAD_REQUEST);
 
 		const std::string headerName(headerField.substr(0, cln));
 		const std::string headerValue(headerField.substr(cln + 2));
@@ -232,7 +230,7 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 std::vector<std::uint8_t> HttpRequest::Serialize(const HttpRequest& httpRequest) {
 
 	if (!((httpRequest.GetVersion() == HttpVersion::HTTP_1_0) || (httpRequest.GetVersion() == HttpVersion::HTTP_1_1)))
-		throw std::invalid_argument("Cannot serialize HTTP request: unsupported HTTP version.");
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
 
 	std::ostringstream stream;
 
