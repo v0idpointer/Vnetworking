@@ -103,6 +103,104 @@ void HttpResponse::DeletePayload() {
 	this->m_payload = { };
 }
 
+HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
+
+	if (!((version == HttpVersion::HTTP_1_0) || (version == HttpVersion::HTTP_1_1)))
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+
+	HttpResponse httpResponse;
+
+	// convert the byte buffer into a string:
+	std::string_view resstr = { reinterpret_cast<const char*>(data.data()), data.size() };
+
+	// parse the first line of the response (version and status):
+
+	std::size_t responseLineEnd = resstr.find("\r\n");
+	if (responseLineEnd == std::string_view::npos)
+		throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad response.");
+
+	const std::size_t versionEnd = resstr.find(' ');
+	if ((versionEnd == std::string_view::npos) || (versionEnd >= responseLineEnd))
+		throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad response.");
+
+	// check if the version is http 1.0 or 1.1:
+	const std::string_view versionStr = resstr.substr(0, versionEnd);
+	if (!((versionStr == "HTTP/1.0") || (versionStr == "HTTP/1.1")))
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+
+	httpResponse.SetVersion((versionStr == "HTTP/1.1") ? HttpVersion::HTTP_1_1 : HttpVersion::HTTP_1_0);
+
+	resstr = resstr.substr(versionEnd + 1);
+	responseLineEnd -= ToString(httpResponse.GetVersion()).length();
+
+	const std::size_t statusCodeEnd = resstr.find(' ');
+	if ((statusCodeEnd == std::string_view::npos) || (statusCodeEnd >= responseLineEnd))
+		throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad response.");
+
+	// check if the status code is valid:
+	const std::string_view statusCodeStr = resstr.substr(0, statusCodeEnd);
+	std::string_view::const_iterator it = std::find_if(statusCodeStr.begin(), statusCodeStr.end(), [&] (const char ch) -> bool {
+		if ((ch >= '0') && (ch <= '9')) return false;
+		else return true;
+	});
+
+	if (it != statusCodeStr.end())
+		throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad HTTP status code.");
+
+	// set the status code:
+	const HttpStatusCode statusCode = HttpStatusCode(std::stoul(statusCodeStr.data()));
+
+	const bool validStatusCode = [&] (void) -> bool {
+
+		try { const auto str = ToString(statusCode); }
+		catch (const std::exception&) {
+			return false;
+		}
+
+		return true;
+	}();
+
+	if(!validStatusCode)
+		throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad HTTP status code.");
+	
+	httpResponse.SetStatusCode(statusCode);
+	resstr = resstr.substr(responseLineEnd + 1);
+
+	// parse http headers:
+
+	if (resstr.empty()) return httpResponse;
+
+	// parse headers until the line containing CRLF is reached.
+	bool headerParsing = (!resstr.substr(0, resstr.find("\r\n")).empty());
+	while (headerParsing) {
+
+		const std::string_view headerField = resstr.substr(0, resstr.find("\r\n"));
+
+		const std::size_t cln = headerField.find(": ");
+		if (cln == std::string_view::npos)
+			throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad response.");
+
+		const std::string headerName(headerField.substr(0, cln));
+		const std::string headerValue(headerField.substr(cln + 2));
+		httpResponse.GetHeaders().AddHeader(headerName, headerValue);
+
+		resstr = resstr.substr(resstr.find("\r\n") + 2);
+		headerParsing = (!resstr.substr(0, resstr.find("\r\n")).empty());
+
+	}
+
+	resstr = resstr.substr(2);
+
+	if (resstr.empty()) return httpResponse;
+
+	// copy the payload:
+	std::vector<std::uint8_t> payload(resstr.length());
+	memcpy_s(payload.data(), payload.size(), resstr.data(), resstr.length());
+	httpResponse.SetPayload(std::move(payload));
+
+	return httpResponse;
+}
+
 std::vector<std::uint8_t> HttpResponse::Serialize(const HttpResponse& httpResponse) {
 
 	if (!((httpResponse.GetVersion() == HttpVersion::HTTP_1_0) || (httpResponse.GetVersion() == HttpVersion::HTTP_1_1)))
