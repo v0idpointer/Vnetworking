@@ -172,6 +172,7 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 
 	// parse headers until the line containing CRLF is reached.
 	bool headerParsing = (!resstr.substr(0, resstr.find("\r\n")).empty());
+	std::vector<std::pair<std::string, std::string>> headers = { };
 	while (headerParsing) {
 
 		const std::string_view headerField = resstr.substr(0, resstr.find("\r\n"));
@@ -182,12 +183,16 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 
 		const std::string headerName(headerField.substr(0, cln));
 		const std::string headerValue(headerField.substr(cln + 2));
-		httpResponse.GetHeaders().AddHeader(headerName, headerValue);
+		headers.push_back({ headerName, headerValue });
 
 		resstr = resstr.substr(resstr.find("\r\n") + 2);
 		headerParsing = (!resstr.substr(0, resstr.find("\r\n")).empty());
 
 	}
+
+	std::sort(headers.begin(), headers.end());
+	for (const auto& [headerName, headerValue] : headers)
+		httpResponse.GetHeaders().AddHeader(headerName, headerValue);
 
 	resstr = resstr.substr(2);
 

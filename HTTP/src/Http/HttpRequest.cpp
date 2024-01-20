@@ -197,6 +197,7 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	
 	// parse headers until the line containing CRLF is reached.
 	bool headerParsing = ( !reqstr.substr(0, reqstr.find("\r\n")).empty() );
+	std::vector<std::pair<std::string, std::string>> headers = { };
 	while (headerParsing) {
 		
 		const std::string_view headerField = reqstr.substr(0, reqstr.find("\r\n"));
@@ -207,12 +208,16 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 
 		const std::string headerName(headerField.substr(0, cln));
 		const std::string headerValue(headerField.substr(cln + 2));
-		httpRequest.GetHeaders().AddHeader(headerName, headerValue);
+		headers.push_back({ headerName, headerValue });
 
 		reqstr = reqstr.substr(reqstr.find("\r\n") + 2);
 		headerParsing = (!reqstr.substr(0, reqstr.find("\r\n")).empty());
 		
 	}
+
+	std::sort(headers.begin(), headers.end());
+	for (const auto& [headerName, headerValue] : headers)
+		httpRequest.GetHeaders().AddHeader(headerName, headerValue);
 
 	reqstr = reqstr.substr(2);
 
