@@ -454,3 +454,27 @@ std::int32_t Socket::GetAvailableBytes() {
 
 	return static_cast<std::int32_t>(argp);
 }
+
+void Socket::GetSocketAddress(ISocketAddress& sockaddr) {
+
+	struct sockaddr sockName;
+	std::int32_t sockNameLen = sizeof(sockName);
+
+	if (getsockname(this->m_socket, &sockName, &sockNameLen))
+		throw SocketException(WSAGetLastError());
+
+	NativeSockaddrToISocketAddress(static_cast<Socket&>(*this), &sockName, sockaddr);
+
+}
+
+void Socket::GetPeerAddress(ISocketAddress& sockaddr) {
+
+	struct sockaddr peerName;
+	std::int32_t peerNameLen = sizeof(peerName);
+
+	if (getpeername(this->m_socket, &peerName, &peerNameLen))
+		throw SocketException(WSAGetLastError());
+
+	NativeSockaddrToISocketAddress(static_cast<Socket&>(*this), &peerName, sockaddr);
+
+}

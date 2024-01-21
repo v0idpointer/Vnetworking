@@ -78,6 +78,9 @@ namespace Vnetworking::Sockets {
 
 		std::int32_t GetAvailableBytes(void);
 
+		void GetSocketAddress(ISocketAddress& sockaddr);
+		void GetPeerAddress(ISocketAddress& sockaddr);
+
 	};
 
 }
