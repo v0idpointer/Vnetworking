@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <sstream>
 
+#include <iostream>
+
 using namespace Vnetworking;
 
 Uri::Uri(const std::string& uriString) {
@@ -69,11 +71,38 @@ Uri::Uri(const std::string& uriString) {
 		}
 		this->m_userInfo = userInfo;
 
+		// IPv6 addresses must be surrounded by brackets,
+		// so, if the authority (in this stage this should be host + optional port)
+		// starts with '[', copy the address into a temp variable and replace it
+		// with a random ipv4 address. this shouldn't cause any errors with the parser.
+		// once the port is parsed, replace the random ipv4 address with the stored ipv6 address.
+		// this is stupid.
+		const bool isIpv6 = (authority.find('[') == 0);
+		std::optional<std::string> addr = std::nullopt;
+		if (isIpv6) {
+
+			if (authority.find(']') == std::string::npos)
+				throw std::invalid_argument("Bad URI host format.");
+
+			addr = authority.substr(1, authority.find(']') - 1);
+			if(addr->empty())
+				throw std::invalid_argument("Bad URI host format.");
+
+			authority = authority.substr(addr->length() + 2);
+			authority = ("0.0.0.0" + authority);
+				
+		}
+
 		std::optional<std::string> port;
 		if (authority.find(':') != std::string::npos) {
 			port = authority.substr(authority.find(':') + 1);
 			authority = authority.substr(0, authority.find(':'));
 		}
+
+		// at this point, authority only contains the host or address.
+		// if the previous step detected IPv6, replace whatever is currently stored
+		// in authority with the stored address.
+		if (isIpv6) authority = addr.value();
 
 		if (authority.empty()) throw std::invalid_argument("URI host cannot be an empty string.");
 		std::transform(authority.begin(), authority.end(), authority.begin(), [&] (const char ch) -> char {
