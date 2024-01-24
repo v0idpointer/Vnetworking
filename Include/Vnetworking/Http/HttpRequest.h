@@ -12,6 +12,7 @@
 #include <Vnetworking/Http/HttpMethod.h>
 #include <Vnetworking/Http/HttpHeaders.h>
 
+#include <string>
 #include <cstdint>
 #include <vector>
 
@@ -29,7 +30,9 @@ namespace Vnetworking::Http {
 	public:
 		HttpRequest(void);
 		HttpRequest(const HttpMethod method, const Uri& requestUri);
+		HttpRequest(const HttpMethod method, const std::string& requestUri);
 		HttpRequest(const HttpVersion version, const HttpMethod method, const Uri& requestUri);
+		HttpRequest(const HttpVersion version, const HttpMethod method, const std::string& requestUri);
 		HttpRequest(const HttpRequest& httpRequest);
 		HttpRequest(HttpRequest&& httpRequest) noexcept;
 		virtual ~HttpRequest(void);
@@ -49,6 +52,7 @@ namespace Vnetworking::Http {
 		void SetVersion(const HttpVersion version);
 		void SetMethod(const HttpMethod method);
 		void SetRequestUri(const Uri& requestUri);
+		void SetRequestUri(const std::string& requestUri);
 		void SetHeaders(const HttpHeaders& httpHeaders);
 		void SetPayload(const std::vector<std::uint8_t>& payload);
 		void SetPayload(std::vector<std::uint8_t>&& payload) noexcept;

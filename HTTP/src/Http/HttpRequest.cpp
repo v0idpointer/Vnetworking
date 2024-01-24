@@ -9,19 +9,25 @@ using namespace Vnetworking;
 using namespace Vnetworking::Http;
 
 HttpRequest::HttpRequest()
-	: HttpRequest(HttpVersion::HTTP_1_1, HttpMethod::GET, Uri("http:/")) { }
+	: HttpRequest(HttpVersion::HTTP_1_1, HttpMethod::GET, Uri("/")) { }
 
 HttpRequest::HttpRequest(const HttpMethod method, const Uri& requestUri)
 	: HttpRequest(HttpVersion::HTTP_1_1, method, requestUri) { }
 
+HttpRequest::HttpRequest(const HttpMethod method, const std::string& requestUri)
+	: HttpRequest(HttpVersion::HTTP_1_1, method, Uri(requestUri)) { }
+
 HttpRequest::HttpRequest(const HttpVersion version, const HttpMethod method, const Uri& requestUri)
 	: m_version(version), m_method(method), m_requestUri(requestUri) { }
 
-HttpRequest::HttpRequest(const HttpRequest& httpRequest) : m_requestUri(Uri("http:/")) {
+HttpRequest::HttpRequest(const HttpVersion version, const HttpMethod method, const std::string& requestUri)
+	: HttpRequest(version, method, Uri(requestUri)) { }
+
+HttpRequest::HttpRequest(const HttpRequest& httpRequest) : m_requestUri(Uri("/")) {
 	this->operator= (httpRequest);
 }
 
-HttpRequest::HttpRequest(HttpRequest&& httpRequest) noexcept : m_requestUri(Uri("http:/")) {
+HttpRequest::HttpRequest(HttpRequest&& httpRequest) noexcept : m_requestUri(Uri("/")) {
 	this->operator= (std::move(httpRequest));
 }
 
@@ -100,6 +106,10 @@ void HttpRequest::SetRequestUri(const Uri& requestUri) {
 	this->m_requestUri = requestUri;
 }
 
+void HttpRequest::SetRequestUri(const std::string& requestUri) {
+	this->SetRequestUri(Uri(requestUri));
+}
+
 void HttpRequest::SetHeaders(const HttpHeaders& httpHeaders) {
 	this->m_headers = httpHeaders;
 }
@@ -166,7 +176,7 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	std::string_view path = reqstr.substr(0, pathEnd);
 	path = path.substr(path.find('/'));
 	try {
-		const Uri requestUri = { ("http:" + std::string(path)) };
+		const Uri requestUri = { std::string(path) };
 		httpRequest.SetRequestUri(requestUri);
 	}
 	catch (const std::invalid_argument& ex) {
