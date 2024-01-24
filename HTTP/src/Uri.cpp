@@ -5,8 +5,6 @@
 #include <stdexcept>
 #include <sstream>
 
-#include <iostream>
-
 using namespace Vnetworking;
 
 Uri::Uri(const std::string& uriString) {
@@ -33,6 +31,41 @@ Uri::Uri(const std::string& uriString) {
 	
 	if (it != uriString.end())
 		throw std::invalid_argument("URI contains invalid character(s).");
+
+	// if the uri string starts with a forward slash, parse it as a relative uri.
+	// this is pretty much copy-paste path query and fragment parser.
+	const bool isRelativeUri = (uriString.find('/') == 0);
+	if (isRelativeUri) {
+		
+		std::string path = uriString;
+		std::string tmp = path;
+		if (path.find('?') != std::string::npos) path = path.substr(0, path.find('?'));
+		if (path.find('#') != std::string::npos) path = path.substr(0, path.find('#'));
+		while (path.starts_with("//")) path = path.substr(1);
+		while (path.ends_with('/')) path = path.substr(0, (path.length() - 1));
+
+		std::size_t pos = 0;
+		while ((pos = path.find("//", pos)) != std::string::npos)
+			path.replace(pos, 2, "/");
+
+		if (path.empty()) path = "/";
+		else if (path[0] != '/') path = ("/" + path);
+
+		this->m_path = path;
+
+		if (tmp.find('?') != std::string::npos) {
+			std::string query = tmp.substr(tmp.find('?') + 1);
+			query = query.substr(0, query.find('#'));
+			if (!query.empty()) this->m_query = query;
+		}
+
+		if (tmp.find('#') != std::string::npos) {
+			std::string fragment = tmp.substr(tmp.find('#') + 1);
+			if (!fragment.empty()) this->m_fragment = fragment;
+		}
+
+		return;
+	}
 
 	// parse the scheme:
 	if (uriString.find(':') == std::string::npos)
@@ -102,7 +135,7 @@ Uri::Uri(const std::string& uriString) {
 		// at this point, authority only contains the host or address.
 		// if the previous step detected IPv6, replace whatever is currently stored
 		// in authority with the stored address.
-		if (isIpv6) authority = addr.value();
+		if (isIpv6) authority = ("[" + addr.value() + "]");
 
 		if (authority.empty()) throw std::invalid_argument("URI host cannot be an empty string.");
 		std::transform(authority.begin(), authority.end(), authority.begin(), [&] (const char ch) -> char {
