@@ -9,6 +9,7 @@ using namespace Vnetworking::Http;
 
 static const std::unordered_map<HttpVersion, std::string> s_httpVersions = { 
 
+	{ HttpVersion::HTTP_0_9, "HTTP/0.9" },
 	{ HttpVersion::HTTP_1_0, "HTTP/1.0" },
 	{ HttpVersion::HTTP_1_1, "HTTP/1.1" },
 	{ HttpVersion::HTTP_2_0, "HTTP/2.0" },

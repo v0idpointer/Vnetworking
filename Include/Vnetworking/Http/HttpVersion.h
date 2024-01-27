@@ -15,10 +15,11 @@ namespace Vnetworking::Http {
 
 	enum class VNETHTTPAPI HttpVersion : std::uint16_t {
 
-		HTTP_1_0 = 1,
-		HTTP_1_1 = 2,
-		HTTP_2_0 = 3,
-		HTTP_3_0 = 4,
+		HTTP_0_9 = 1,
+		HTTP_1_0 = 2,
+		HTTP_1_1 = 3,
+		HTTP_2_0 = 4,
+		HTTP_3_0 = 5,
 
 	};
 
