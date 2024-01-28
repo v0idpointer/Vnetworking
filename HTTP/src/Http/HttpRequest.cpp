@@ -126,10 +126,44 @@ void HttpRequest::DeletePayload() {
 	this->m_payload = { };
 }
 
-HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
+// parse function for HTTP/0.9 requests
+static HttpRequest Parse_0_9(const std::vector<std::uint8_t>& data) { 
 
-	if (!((version == HttpVersion::HTTP_1_0) || (version == HttpVersion::HTTP_1_1)))
-		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+	HttpRequest req = { HttpVersion::HTTP_0_9, HttpMethod::GET, "/" };
+	
+	std::string_view reqstr = { reinterpret_cast<const char*>(data.data()), data.size() };
+
+	std::size_t requestLineEnd = reqstr.find("\r\n");
+	if (requestLineEnd == std::string_view::npos)
+		throw HttpException(HttpStatusCode::BAD_REQUEST);
+
+	const std::size_t methodEnd = reqstr.find(' ');
+	if ((methodEnd == std::string_view::npos) || (methodEnd >= requestLineEnd))
+		throw HttpException(HttpStatusCode::BAD_REQUEST);
+
+	if (reqstr.substr(0, methodEnd) != "GET")
+		throw HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, "Invalid and/or unsupported HTTP method.");
+
+	reqstr = reqstr.substr(methodEnd + 1);
+	requestLineEnd -= 4;
+
+	const std::string_view requestUri = reqstr.substr(0, requestLineEnd);
+	if (requestUri.empty())
+		throw HttpException(HttpStatusCode::BAD_REQUEST);
+
+	try { req.SetRequestUri(std::string(requestUri)); }
+	catch (const std::invalid_argument& ex) {
+		throw HttpException(HttpStatusCode::BAD_REQUEST, std::format("Bad request URI: {0}", ex.what()));
+	}
+	catch (const std::length_error&) {
+		throw HttpException(HttpStatusCode::URI_TOO_LONG, "Request URI too long.");
+	}
+
+	return req; 
+}
+
+// parse function for HTTP/1.0 and HTTP/1.1 requests
+static HttpRequest Parse_1_x(const std::vector<std::uint8_t>& data, const HttpVersion version) {
 
 	HttpRequest httpRequest;
 
@@ -149,12 +183,18 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	// set http method. if the method is not valid, throw an exception:
 	const std::string_view methodStr = reqstr.substr(0, methodEnd);
 	const std::vector<HttpMethod> methods = {
-		HttpMethod::GET, HttpMethod::HEAD, HttpMethod::POST, HttpMethod::PUT, HttpMethod::DELETE,
+		HttpMethod::GET, HttpMethod::HEAD, HttpMethod::POST, HttpMethod(0xFF00), HttpMethod::PUT, HttpMethod::DELETE,
 		HttpMethod::CONNECT, HttpMethod::OPTIONS, HttpMethod::TRACE, HttpMethod::PATCH, HttpMethod(0xFFFF),
 	};
 
 	for (const HttpMethod method : methods) {
-		
+
+		// only allow GET, HEAD and POST methods if the version is HTTP/1.0
+		if (static_cast<std::uint16_t>(method) == 0xFF00) {
+			if (version == HttpVersion::HTTP_1_1) continue;
+			else throw HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, "Invalid and/or unsupported HTTP method.");
+		}
+
 		if (static_cast<std::uint16_t>(method) == 0xFFFF)
 			throw HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, "Invalid and/or unsupported HTTP method.");
 
@@ -193,25 +233,25 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	// check if the http version is 1.1 or 1.0:
 	const std::size_t versionEnd = (requestLineEnd - 1);
 	const std::string_view versionStr = reqstr.substr(0, versionEnd);
-	if (!((versionStr == "HTTP/1.0") || (versionStr == "HTTP/1.1")))
-		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+	if (versionStr != ToString(version))
+	 	throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
 
-	httpRequest.SetVersion((versionStr == "HTTP/1.1") ? HttpVersion::HTTP_1_1 : HttpVersion::HTTP_1_0);
+	httpRequest.SetVersion(version);
 
 	reqstr = reqstr.substr(versionEnd + 2);
 
 	// parse http headers:
-	
+
 	// if the request string is empty, it means the request has no headers & no payload:
 	if (reqstr.empty()) return httpRequest;
-	
+
 	// parse headers until the line containing CRLF is reached.
-	bool headerParsing = ( !reqstr.substr(0, reqstr.find("\r\n")).empty() );
+	bool headerParsing = (!reqstr.substr(0, reqstr.find("\r\n")).empty());
 	std::vector<std::pair<std::string, std::string>> headers = { };
 	while (headerParsing) {
-		
+
 		const std::string_view headerField = reqstr.substr(0, reqstr.find("\r\n"));
-		
+
 		const std::size_t cln = headerField.find(": ");
 		if (cln == std::string_view::npos)
 			throw HttpException(HttpStatusCode::BAD_REQUEST);
@@ -222,12 +262,18 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 
 		reqstr = reqstr.substr(reqstr.find("\r\n") + 2);
 		headerParsing = (!reqstr.substr(0, reqstr.find("\r\n")).empty());
-		
+
 	}
 
 	std::sort(headers.begin(), headers.end());
-	for (const auto& [headerName, headerValue] : headers)
-		httpRequest.GetHeaders().AddHeader(headerName, headerValue);
+	for (const auto& [headerName, headerValue] : headers) {
+
+		try { httpRequest.GetHeaders().AddHeader(headerName, headerValue); }
+		catch (const std::invalid_argument& ex) {
+			throw HttpException(HttpStatusCode::BAD_REQUEST, std::format("Bad request header(s): {0}", ex.what()));
+		}
+
+	}
 
 	reqstr = reqstr.substr(2);
 
@@ -242,10 +288,61 @@ HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const Http
 	return httpRequest;
 }
 
-std::vector<std::uint8_t> HttpRequest::Serialize(const HttpRequest& httpRequest) {
+HttpRequest HttpRequest::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
 
-	if (!((httpRequest.GetVersion() == HttpVersion::HTTP_1_0) || (httpRequest.GetVersion() == HttpVersion::HTTP_1_1)))
+	switch (version) {
+	
+	case HttpVersion::HTTP_0_9:
+		return Parse_0_9(data);
+		break;
+
+	case HttpVersion::HTTP_1_0:
+	case HttpVersion::HTTP_1_1:
+		return Parse_1_x(data, version);
+		break;
+
+	default:
 		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+		break;
+
+	}
+
+}
+
+// serialize function for HTTP/0.9 requests
+static std::vector<std::uint8_t> Serialize_0_9(const HttpRequest& httpRequest) {
+
+	if(httpRequest.GetMethod() != HttpMethod::GET)
+		throw HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, "Invalid and/or unsupported HTTP method.");
+
+	if (httpRequest.GetHeaders().GetHeaderCount() > 0)
+		throw HttpException(HttpStatusCode::BAD_REQUEST, "HTTP headers are not supported in this HTTP version.");
+
+	std::ostringstream stream;
+
+	stream << ToString(HttpMethod::GET) << " ";
+	stream << httpRequest.GetRequestUri().GetPath().value();
+	if (httpRequest.GetRequestUri().GetQuery().has_value())
+		stream << "?" << httpRequest.GetRequestUri().GetQuery().value();
+	stream << "\r\n";
+
+	const std::string str = (stream.str());
+	std::vector<std::uint8_t> data(str.size());
+	for (std::size_t i = 0; i < str.length(); ++i)
+		data[i] = str[i];
+
+	return data;
+}
+
+// serialize function for HTTP/1.0 and HTTP/1.1 requests
+static std::vector<std::uint8_t> Serialize_1_x(const HttpRequest& httpRequest) {
+
+	// when serializing HTTP/1.0 requests, only allow GET, HEAD and POST methods
+	if (httpRequest.GetVersion() == HttpVersion::HTTP_1_0) {
+		const HttpMethod method = httpRequest.GetMethod();
+		if (!((method == HttpMethod::GET) || (method == HttpMethod::HEAD) || (method == HttpMethod::POST))) 
+			throw HttpException(HttpStatusCode::METHOD_NOT_ALLOWED, "Invalid and/or unsupported HTTP method.");
+	}
 
 	std::ostringstream stream;
 
@@ -270,4 +367,25 @@ std::vector<std::uint8_t> HttpRequest::Serialize(const HttpRequest& httpRequest)
 		data[i] = str[i];
 
 	return data;
+}
+
+std::vector<std::uint8_t> HttpRequest::Serialize(const HttpRequest& httpRequest) {
+
+	switch (httpRequest.GetVersion()) {
+
+	case HttpVersion::HTTP_0_9:
+		return Serialize_0_9(httpRequest);
+		break;
+
+	case HttpVersion::HTTP_1_0:
+	case HttpVersion::HTTP_1_1:
+		return Serialize_1_x(httpRequest);
+		break;
+
+	default:
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+		break;
+
+	}
+
 }
