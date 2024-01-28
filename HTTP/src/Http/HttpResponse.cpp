@@ -1,6 +1,7 @@
 #include <Vnetworking/Http/HttpResponse.h>
 #include <Vnetworking/Http/HttpException.h>
 
+#include <format>
 #include <sstream>
 #include <algorithm>
 
@@ -103,10 +104,17 @@ void HttpResponse::DeletePayload() {
 	this->m_payload = { };
 }
 
-HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
+// parse function for HTTP/0.9 responses
+static HttpResponse Parse_0_9(const std::vector<std::uint8_t>& data) {
 
-	if (!((version == HttpVersion::HTTP_1_0) || (version == HttpVersion::HTTP_1_1)))
-		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+	HttpResponse httpResponse = { HttpVersion::HTTP_0_9, HttpStatusCode::OK };
+	httpResponse.SetPayload(data);
+
+	return httpResponse;
+}
+
+// parse function for HTTP/1.0 and HTTP/1.1 responses
+static HttpResponse Parse_1_x(const std::vector<std::uint8_t>& data, const HttpVersion version) {
 
 	HttpResponse httpResponse;
 
@@ -125,10 +133,10 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 
 	// check if the version is http 1.0 or 1.1:
 	const std::string_view versionStr = resstr.substr(0, versionEnd);
-	if (!((versionStr == "HTTP/1.0") || (versionStr == "HTTP/1.1")))
+	if (versionStr != ToString(version))
 		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
 
-	httpResponse.SetVersion((versionStr == "HTTP/1.1") ? HttpVersion::HTTP_1_1 : HttpVersion::HTTP_1_0);
+	httpResponse.SetVersion(version);
 
 	resstr = resstr.substr(versionEnd + 1);
 	responseLineEnd -= ToString(httpResponse.GetVersion()).length();
@@ -152,6 +160,8 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 
 	const bool validStatusCode = [&] (void) -> bool {
 
+		// TODO: if version is HTTP/1.0, check if the status code is a valid 1.0 status code.
+
 		try { const auto str = ToString(statusCode); }
 		catch (const std::exception&) {
 			return false;
@@ -160,9 +170,9 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 		return true;
 	}();
 
-	if(!validStatusCode)
+	if (!validStatusCode)
 		throw HttpException(HttpStatusCode::BAD_REQUEST, "Bad HTTP status code.");
-	
+
 	httpResponse.SetStatusCode(statusCode);
 	resstr = resstr.substr(responseLineEnd + 1);
 
@@ -191,8 +201,14 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 	}
 
 	std::sort(headers.begin(), headers.end());
-	for (const auto& [headerName, headerValue] : headers)
-		httpResponse.GetHeaders().AddHeader(headerName, headerValue);
+	for (const auto& [headerName, headerValue] : headers) {
+
+		try { httpResponse.GetHeaders().AddHeader(headerName, headerValue); }
+		catch (const std::invalid_argument& ex) {
+			throw HttpException(HttpStatusCode::BAD_REQUEST, std::format("Bad response header(s): {0}", ex.what()));
+		}
+
+	}
 
 	resstr = resstr.substr(2);
 
@@ -206,10 +222,39 @@ HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const Ht
 	return httpResponse;
 }
 
-std::vector<std::uint8_t> HttpResponse::Serialize(const HttpResponse& httpResponse) {
+HttpResponse HttpResponse::Parse(const std::vector<std::uint8_t>& data, const HttpVersion version) {
 
-	if (!((httpResponse.GetVersion() == HttpVersion::HTTP_1_0) || (httpResponse.GetVersion() == HttpVersion::HTTP_1_1)))
+	switch (version) {
+
+	case HttpVersion::HTTP_0_9:
+		return Parse_0_9(data);
+		break;
+
+	case HttpVersion::HTTP_1_0:
+	case HttpVersion::HTTP_1_1:
+		return Parse_1_x(data, version);
+		break;
+
+	default:
 		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+		break;
+
+	}
+
+}
+
+static std::vector<std::uint8_t> Serialize_0_9(const HttpResponse& httpResponse) { 
+	
+	if (httpResponse.GetStatusCode() != HttpStatusCode::OK)
+		throw HttpException("HTTP status codes are not supported in this HTTP version.");
+
+	if (httpResponse.GetHeaders().GetHeaderCount() > 0)
+		throw HttpException("HTTP headers are not supported in this HTTP version.");
+	
+	return { httpResponse.GetPayload().begin(), httpResponse.GetPayload().end() };
+}
+
+static std::vector<std::uint8_t> Serialize_1_x(const HttpResponse& httpResponse) { 
 
 	std::ostringstream stream;
 
@@ -232,4 +277,25 @@ std::vector<std::uint8_t> HttpResponse::Serialize(const HttpResponse& httpRespon
 		data[i] = str[i];
 
 	return data;
+}
+
+std::vector<std::uint8_t> HttpResponse::Serialize(const HttpResponse& httpResponse) {
+
+	switch (httpResponse.GetVersion()) {
+
+	case HttpVersion::HTTP_0_9:
+		return Serialize_0_9(httpResponse);
+		break;
+
+	case HttpVersion::HTTP_1_0:
+	case HttpVersion::HTTP_1_1:
+		return Serialize_1_x(httpResponse);
+		break;
+
+	default:
+		throw HttpException(HttpStatusCode::HTTP_VERSION_NOT_SUPPORTED);
+		break;
+
+	}
+
 }
