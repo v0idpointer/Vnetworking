@@ -24,4 +24,9 @@ ForEach ($buildTarget In $vnetComponents) {
 
 }
 
+# delete the build directory
+If (Test-Path -LiteralPath ".\Build") {
+    Remove-Item -LiteralPath ".\Build" -Force -Recurse
+}
+
 Write-Output "*** OK"

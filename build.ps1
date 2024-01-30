@@ -40,9 +40,14 @@ Options:
 $buildStarted = Get-Date
 
 # list of Vnetlib components:
-$vnetComponents = @{
-    Core = $True        # Vnetcore should always be built.
-    HTTP = $Http
+$vnetComponents = @(
+    ("Core", $True, "Vnetcore"),         # Vnetcore should always be built.
+    ("HTTP", $Http, "Vnethttp")
+)
+
+# delete the build directory, if one exists.
+If (Test-Path -LiteralPath ".\Build") {
+    Remove-Item -LiteralPath ".\Build" -Force -Recurse
 }
 
 # locate msbuild:
@@ -70,22 +75,40 @@ ForEach ($p In $Platform.Split(",")) {
         $c = ( $c.Substring(0, 1).ToUpper() + $c.Substring(1).ToLower() )
         $p = $p.ToLower()
 
-        ForEach ($buildTarget In $vnetComponents.Keys) {
+        ForEach ($buildTarget In $vnetComponents) {
 
-            If (-Not $vnetComponents[$buildTarget]) {
+            If (-Not $buildTarget[1]) {
                 Continue
             }
 
-            Write-Output "*** Building $($buildTarget) for $($p) ($($c))"
+            Write-Output "*** Building $($buildTarget[0]) for $($p) ($($c))"
 
             $msbuildArgs = @(
                 ("Vnetworking.sln"),
-                ("/target:$($buildTarget)"),
+                ("/target:$($buildTarget[0])"),
                 ("/p:Platform=$($p)"),
                 ("/p:Configuration=$($c)")
             )
     
             & $msbuild $msbuildArgs
+
+            $outputDir = ".\Build\$($p)-$($c)\"
+
+            # create output directores, if they don't exist:
+            If (-Not (Test-Path -LiteralPath "$($outputDir)\Bin") ) {
+                New-Item -Path "$($outputDir)\Bin" -ItemType Directory -Force | Out-Null
+            }
+
+            If (-Not (Test-Path -LiteralPath "$($outputDir)\Lib") ) {
+                New-Item -Path "$($outputDir)\Lib" -ItemType Directory -Force | Out-Null
+            }
+
+            # copy the compiled files and required include files to their directories:
+            Copy-Item -Path ".\$($buildTarget[0])\bin\$($p)-$($c)\$($buildTarget[2]).dll" `
+                    -Destination "$($outputDir)\Bin\$($buildTarget[2]).dll" -Force | Out-Null
+
+            Copy-Item -Path ".\$($buildTarget[0])\bin\$($p)-$($c)\$($buildTarget[2]).lib" `
+                    -Destination "$($outputDir)\Lib\$($buildTarget[2]).lib" -Force | Out-Null
 
         }
 
