@@ -18,6 +18,12 @@
 #define VNETHTTPAPI __declspec(dllimport)
 #endif
 
+#ifdef NE_BUILD_SECURITY_DLL
+#define VNETSECURITYAPI __declspec(dllexport)
+#else
+#define VNETSECURITYAPI __declspec(dllimport)
+#endif
+
 #pragma warning (disable: 4251)
 #pragma warning (disable: 4275)
 

@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Core\Core.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HTTP", "HTTP\HTTP.vcxproj", "{244A88EA-6976-4608-B451-A0752FBC987C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Security", "Security\Security.vcxproj", "{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -41,6 +43,14 @@ Global
 		{244A88EA-6976-4608-B451-A0752FBC987C}.Release|x64.Build.0 = Release|x64
 		{244A88EA-6976-4608-B451-A0752FBC987C}.Release|x86.ActiveCfg = Release|Win32
 		{244A88EA-6976-4608-B451-A0752FBC987C}.Release|x86.Build.0 = Release|Win32
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Debug|x64.ActiveCfg = Debug|x64
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Debug|x64.Build.0 = Debug|x64
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Debug|x86.ActiveCfg = Debug|Win32
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Debug|x86.Build.0 = Debug|Win32
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Release|x64.ActiveCfg = Release|x64
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Release|x64.Build.0 = Release|x64
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Release|x86.ActiveCfg = Release|Win32
+		{EBDC5F79-CA5D-48D0-9BD9-FD7898A23A88}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
