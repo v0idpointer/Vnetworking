@@ -5,7 +5,8 @@ Copyright (C) V0idPointer`n
 
 $vnetComponents = @(
     ("Core"),
-    ("HTTP")
+    ("HTTP"),
+    ("Security")
 )
 
 # delete bin and int directories for all vnet components:

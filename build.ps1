@@ -2,6 +2,7 @@ Param(
     [String]$Platform = "x64",
     [String]$Configuration = "Release",
     [Switch]$Http = $False,
+    [Switch]$Security = $False,
     [Switch]$Help = $False
 )
 
@@ -30,6 +31,9 @@ Options:
     -Http
         Build Vnetworking HTTP Library (Vnethttp)
 
+    -Security
+        Build Vnetworking SSL/TLS Library (Vnetsec)
+
     -Help
         Show help information.
 "@
@@ -42,7 +46,8 @@ $buildStarted = Get-Date
 # list of Vnetlib components:
 $vnetComponents = @(
     ("Core", $True, "Vnetcore"),         # Vnetcore should always be built.
-    ("HTTP", $Http, "Vnethttp")
+    ("HTTP", $Http, "Vnethttp"),
+    ("Security", $Security, "Vnetsec")
 )
 
 # delete the build directory, if one exists.
