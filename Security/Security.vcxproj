@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="src\DllMain.cpp" />
     <ClCompile Include="src\Security\Certificate.cpp" />
+    <ClCompile Include="src\Security\CertificateStore.cpp" />
     <ClCompile Include="src\Security\SecurityException.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
