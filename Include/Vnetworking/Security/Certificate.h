@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <chrono>
+#include <utility>
 
 namespace Vnetworking::Security {
 
@@ -24,6 +25,8 @@ namespace Vnetworking::Security {
 		NativeCertificateContext_t m_certificateContext;
 
 	public:
+		Certificate(const std::vector<std::uint8_t>& data);
+		Certificate(const std::filesystem::path& path);
 		Certificate(const std::vector<std::uint8_t>& data, const std::string& password);
 		Certificate(const std::filesystem::path& path, const std::string& password);
 		Certificate(const Certificate&) = delete;
@@ -43,6 +46,11 @@ namespace Vnetworking::Security {
 		std::chrono::time_point<std::chrono::system_clock> GetNotBefore(void) const;
 		std::chrono::time_point<std::chrono::system_clock> GetNotAfter(void) const;
 		
+		std::pair<std::string, std::string> GetSignatureAlgorithm(void) const;
+		std::pair<std::string, std::string> GetPublicKeyAlgorithm(void) const;
+		std::vector<std::uint8_t> GetPublicKey(void) const;
+		std::vector<std::uint8_t> GetPublicKeyParams(void) const;
+
 	};
 
 }

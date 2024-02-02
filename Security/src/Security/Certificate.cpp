@@ -27,6 +27,24 @@ static std::vector<std::uint8_t> ReadBinaryFile(const std::filesystem::path& pat
 	return buf;
 }
 
+Certificate::Certificate(const std::vector<std::uint8_t>& data) {
+
+	PCCERT_CONTEXT pCertContext = CertCreateCertificateContext(
+		(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING),
+		const_cast<LPBYTE>(data.data()),
+		static_cast<DWORD>(data.size())
+	);
+
+	if (pCertContext == NULL)
+		throw SecurityException(GetLastError());
+
+	this->m_certificateContext = reinterpret_cast<NativeCertificateContext_t>(pCertContext);
+
+}
+
+Certificate::Certificate(const std::filesystem::path& path)
+	: Certificate(ReadBinaryFile(path)) { }
+
 Certificate::Certificate(const std::vector<std::uint8_t>& data, const std::string& password) {
 
 	CRYPT_DATA_BLOB blob;
@@ -97,6 +115,10 @@ Certificate& Certificate::operator= (Certificate&& cert) noexcept {
 
 bool Certificate::operator== (const Certificate& cert) const {
 	return (this->m_certificateContext == cert.m_certificateContext);
+}
+
+NativeCertificateContext_t Certificate::GetNativeCertificateContext() const {
+	return this->m_certificateContext;
 }
 
 std::int32_t Certificate::GetVersion() const {
@@ -206,4 +228,67 @@ std::chrono::time_point<std::chrono::system_clock> Certificate::GetNotAfter() co
 	FILETIME ft = pCertContext->pCertInfo->NotAfter;
 
 	return FiletimeToTimepoint(ft);
+}
+
+static std::string GetFriendlyNameFromOid(const std::string& oid) noexcept {
+
+	std::string friendlyName;
+
+	PCCRYPT_OID_INFO info = CryptFindOIDInfo(
+		CRYPT_OID_INFO_OID_KEY,
+		const_cast<void*>(reinterpret_cast<const void*>(oid.c_str())),
+		NULL
+	);
+
+	if (info) {
+		int len = WideCharToMultiByte(CP_UTF8, NULL, info->pwszName, -1, NULL, NULL, NULL, NULL);
+		friendlyName.resize(len);
+		WideCharToMultiByte(CP_UTF8, NULL, info->pwszName, -1, const_cast<char*>(friendlyName.c_str()), len, NULL, NULL);
+	}
+
+	return friendlyName;
+}
+
+std::pair<std::string, std::string> Certificate::GetSignatureAlgorithm() const {
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+	const std::string oid = { pCertContext->pCertInfo->SignatureAlgorithm.pszObjId };
+
+	return { oid, GetFriendlyNameFromOid(oid) };
+}
+
+std::pair<std::string, std::string> Certificate::GetPublicKeyAlgorithm() const {
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+	const std::string oid = { pCertContext->pCertInfo->SubjectPublicKeyInfo.Algorithm.pszObjId };
+
+	return { oid, GetFriendlyNameFromOid(oid) };
+}
+
+std::vector<std::uint8_t> Certificate::GetPublicKey() const {
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+
+	DWORD keyLen = pCertContext->pCertInfo->SubjectPublicKeyInfo.PublicKey.cbData;
+	LPBYTE key = pCertContext->pCertInfo->SubjectPublicKeyInfo.PublicKey.pbData;
+
+	std::vector<std::uint8_t> data(static_cast<std::size_t>(keyLen));
+	for (DWORD i = 0; i < keyLen; ++i) 
+		data[i] = static_cast<std::uint8_t>(key[i]);
+
+	return data;
+}
+
+std::vector<std::uint8_t> Certificate::GetPublicKeyParams() const {
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+
+	DWORD paramsLen = pCertContext->pCertInfo->SubjectPublicKeyInfo.Algorithm.Parameters.cbData;
+	LPBYTE params = pCertContext->pCertInfo->SubjectPublicKeyInfo.Algorithm.Parameters.pbData;
+
+	std::vector<std::uint8_t> data(static_cast<std::size_t>(paramsLen));
+	for (DWORD i = 0; i < paramsLen; ++i)
+		data[i] = static_cast<std::uint8_t>(params[i]);
+
+	return data;
 }
