@@ -1,6 +1,9 @@
 #include <Vnetworking/Security/CertificateStore.h>
 #include <Vnetworking/Security/SecurityException.h>
 
+#include <unordered_map>
+#include <stdexcept>
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <wincrypt.h>
@@ -9,7 +12,40 @@
 
 using namespace Vnetworking::Security;
 
-CertificateStore::CertificateStore(const std::string& storeName) {
+static const std::unordered_map<CertificateStoreLocation, DWORD> s_storeLocations = {
+
+	{ CertificateStoreLocation::CURRENT_USER, CERT_SYSTEM_STORE_CURRENT_USER },
+	{ CertificateStoreLocation::LOCAL_MACHINE, CERT_SYSTEM_STORE_LOCAL_MACHINE },
+
+};
+
+static const std::unordered_map<CertificateStoreName, std::string> s_storeNames = { 
+	
+	{ CertificateStoreName::MY, "MY" },
+	{ CertificateStoreName::CA, "CA" },
+	{ CertificateStoreName::ROOT, "ROOT" },
+	{ CertificateStoreName::TRUST, "Trust" },
+
+};
+
+static inline std::string ToString(const CertificateStoreName storeName) {
+
+	if (!s_storeNames.contains(storeName))
+		throw std::invalid_argument("Invalid certificate store name.");
+
+	return s_storeNames.at(storeName);
+}
+
+CertificateStore::CertificateStore(const std::string& storeName)
+	: CertificateStore(storeName, CertificateStoreLocation::CURRENT_USER) { }
+
+CertificateStore::CertificateStore(const CertificateStoreName storeName)
+	: CertificateStore(ToString(storeName), CertificateStoreLocation::CURRENT_USER) { }
+
+CertificateStore::CertificateStore(const std::string& storeName, const CertificateStoreLocation storeLocation) {
+
+	if (!s_storeLocations.contains(storeLocation))
+		throw std::invalid_argument("Invalid certificate store location.");
 
 	int nameLen = MultiByteToWideChar(CP_UTF8, NULL, storeName.c_str(), -1, NULL, NULL);
 	wchar_t* name = new wchar_t[nameLen];
@@ -19,7 +55,7 @@ CertificateStore::CertificateStore(const std::string& storeName) {
 		CERT_STORE_PROV_SYSTEM,
 		X509_ASN_ENCODING,
 		NULL,
-		CERT_SYSTEM_STORE_CURRENT_USER,
+		s_storeLocations.at(storeLocation),
 		name
 	);
 
@@ -33,6 +69,9 @@ CertificateStore::CertificateStore(const std::string& storeName) {
 	this->m_hCertStore = reinterpret_cast<NativeCertificateStoreHandle_t>(hCertStore);
 
 }
+
+CertificateStore::CertificateStore(const CertificateStoreName storeName, const CertificateStoreLocation storeLocation)
+	: CertificateStore(ToString(storeName), storeLocation) { }
 
 CertificateStore::CertificateStore(CertificateStore&& certStore) noexcept {
 	this->operator= (std::move(certStore));
