@@ -2,6 +2,8 @@
 #include <Vnetworking/Security/SecurityException.h>
 
 #include <fstream>
+#include <sstream>
+#include <optional>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -102,12 +104,66 @@ std::int32_t Certificate::GetVersion() const {
 	return (pCertContext->pCertInfo->dwVersion + 1);
 }
 
+static std::optional<std::string> GetDistinguishedNameAttrib(PCCERT_CONTEXT pCertContext, const char* const attrib, const bool issuerFlag) noexcept {
+
+	DWORD len = CertGetNameStringA(
+		pCertContext,
+		CERT_NAME_ATTR_TYPE,
+		(issuerFlag ? CERT_NAME_ISSUER_FLAG : NULL),
+		reinterpret_cast<void*>(const_cast<char*>(attrib)),
+		NULL,
+		NULL
+	);
+
+	if (len <= 1) 
+		return std::nullopt;
+
+	std::string str;
+	str.resize(static_cast<std::size_t>(len));
+
+	CertGetNameStringA(
+		pCertContext,
+		CERT_NAME_ATTR_TYPE,
+		(issuerFlag ? CERT_NAME_ISSUER_FLAG : NULL),
+		reinterpret_cast<void*>(const_cast<char*>(attrib)),
+		const_cast<char*>(str.c_str()),
+		static_cast<DWORD>(str.length())
+	);
+
+	str.resize(str.length() - 1);
+
+	return str;
+}
+
+static std::string GetDistinguishedName(PCCERT_CONTEXT pCertContext, const bool issuerFlag) {
+
+	std::ostringstream stream;
+
+	const std::optional<std::string> commonName = GetDistinguishedNameAttrib(pCertContext, szOID_COMMON_NAME, issuerFlag);
+	const std::optional<std::string> organizationalUnit = GetDistinguishedNameAttrib(pCertContext, szOID_ORGANIZATIONAL_UNIT_NAME, issuerFlag);
+	const std::optional<std::string> organization = GetDistinguishedNameAttrib(pCertContext, szOID_ORGANIZATION_NAME, issuerFlag);
+	const std::optional<std::string> locality = GetDistinguishedNameAttrib(pCertContext, szOID_LOCALITY_NAME, issuerFlag);
+	const std::optional<std::string> state = GetDistinguishedNameAttrib(pCertContext, szOID_STATE_OR_PROVINCE_NAME, issuerFlag);
+	const std::optional<std::string> country = GetDistinguishedNameAttrib(pCertContext, szOID_COUNTRY_NAME, issuerFlag);
+
+	if (commonName.has_value()) stream << "CN=" << commonName.value();
+	if (organizationalUnit.has_value()) stream << (stream.str().length() ? ", " : "") << "OU=" << organizationalUnit.value();
+	if (organization.has_value()) stream << (stream.str().length() ? ", " : "") << "O=" << organization.value();
+	if (locality.has_value()) stream << (stream.str().length() ? ", " : "") << "L=" << locality.value();
+	if (state.has_value()) stream << (stream.str().length() ? ", " : "") << "ST=" << state.value();
+	if (country.has_value()) stream << (stream.str().length() ? ", " : "") << "C=" << country.value();
+
+	return stream.str();
+}
+
 std::string Certificate::GetSubject() const {
-	return "/";
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+	return GetDistinguishedName(pCertContext, false);
 }
 
 std::string Certificate::GetIssuer() const {
-	return "/";
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+	return GetDistinguishedName(pCertContext, true);
 }
 
 std::vector<std::uint8_t> Certificate::GetSerialNumber() const {
