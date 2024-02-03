@@ -73,7 +73,7 @@ CertificateStore::CertificateStore(const std::string& storeName, const Certifica
 CertificateStore::CertificateStore(const CertificateStoreName storeName, const CertificateStoreLocation storeLocation)
 	: CertificateStore(ToString(storeName), storeLocation) { }
 
-CertificateStore::CertificateStore(const NativeCertificateStoreHandle_t hCertStore) {
+CertificateStore::CertificateStore(const NativeCertificateStoreHandle_t hCertStore, const std::nullptr_t) {
 	if (hCertStore == nullptr)
 		throw std::invalid_argument("Invalid native certificate store handle.");
 	this->m_hCertStore = hCertStore;
@@ -162,9 +162,9 @@ std::optional<Certificate> CertificateStore::EnumCertificates(const std::functio
 
 	PCCERT_CONTEXT pCertContext = NULL;
 	while (pCertContext = CertEnumCertificatesInStore(hCertStore, pCertContext)) {
-		Certificate cert = { CertDuplicateCertificateContext(pCertContext) }; // Certificate takes ownership over PCCERT_CONTEXT.
-		if (fn(cert)) {														  // destructor frees the certificate context.
-			CertFreeCertificateContext(pCertContext);						  // this way, duplicate handle is freed.
+		Certificate cert = { pCertContext, false, nullptr };
+		if (fn(cert)) {
+			CertFreeCertificateContext(pCertContext);
 			return cert;
 		}
 	}

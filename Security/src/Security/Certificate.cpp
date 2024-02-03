@@ -85,10 +85,23 @@ Certificate::Certificate(const std::vector<std::uint8_t>& data, const std::strin
 Certificate::Certificate(const std::filesystem::path& path, const std::string& password)
 	: Certificate(ReadBinaryFile(path), password) { }
 
-Certificate::Certificate(const NativeCertificateContext_t certificateContext) {
+Certificate::Certificate(const NativeCertificateContext_t certificateContext, const bool takeOwnership, const std::nullptr_t) {
+
 	if (certificateContext == nullptr)
 		throw std::invalid_argument("Invalid native certificate context.");
-	this->m_certificateContext = certificateContext;
+
+	if (takeOwnership) this->m_certificateContext = certificateContext;
+	else {
+		PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(certificateContext);
+		PCCERT_CONTEXT pDuplicateContext = CertDuplicateCertificateContext(pCertContext);
+		this->m_certificateContext = reinterpret_cast<NativeCertificateContext_t>(pDuplicateContext);
+	}
+
+}
+
+Certificate::Certificate(const Certificate& cert) {
+	this->m_certificateContext = nullptr;
+	this->operator= (cert);
 }
 
 Certificate::Certificate(Certificate&& cert) noexcept {
@@ -105,6 +118,20 @@ Certificate::~Certificate() {
 
 	this->m_certificateContext = nullptr;
 
+}
+
+Certificate& Certificate::operator= (const Certificate& cert) {
+
+	if (this->m_certificateContext) {
+		PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+		CertFreeCertificateContext(pCertContext);
+	}
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(cert.m_certificateContext);
+	PCCERT_CONTEXT pDuplicateContext = CertDuplicateCertificateContext(pCertContext);
+	this->m_certificateContext = reinterpret_cast<NativeCertificateContext_t>(pDuplicateContext);
+
+	return static_cast<Certificate&>(*this);
 }
 
 Certificate& Certificate::operator= (Certificate&& cert) noexcept {
