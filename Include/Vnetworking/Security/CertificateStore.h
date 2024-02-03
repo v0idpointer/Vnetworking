@@ -13,6 +13,8 @@
 
 #include <string>
 #include <cstdint>
+#include <optional>
+#include <functional>
 
 namespace Vnetworking::Security {
 
@@ -28,6 +30,7 @@ namespace Vnetworking::Security {
 		CertificateStore(const CertificateStoreName storeName);
 		CertificateStore(const std::string& storeName, const CertificateStoreLocation storeLocation);
 		CertificateStore(const CertificateStoreName storeName, const CertificateStoreLocation storeLocation);
+		CertificateStore(const NativeCertificateStoreHandle_t hCertStore);
 		CertificateStore(const CertificateStore&) = delete;
 		CertificateStore(CertificateStore&& certStore) noexcept;
 		virtual ~CertificateStore(void);
@@ -42,6 +45,7 @@ namespace Vnetworking::Security {
 		void DeleteCertificate(const Certificate& cert);
 
 		std::int32_t GetCertificateCount(void) const;
+		std::optional<Certificate> EnumCertificates(const std::function<bool(const Certificate&)> fn) const;
 
 	};
 

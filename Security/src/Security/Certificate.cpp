@@ -85,7 +85,14 @@ Certificate::Certificate(const std::vector<std::uint8_t>& data, const std::strin
 Certificate::Certificate(const std::filesystem::path& path, const std::string& password)
 	: Certificate(ReadBinaryFile(path), password) { }
 
+Certificate::Certificate(const NativeCertificateContext_t certificateContext) {
+	if (certificateContext == nullptr)
+		throw std::invalid_argument("Invalid native certificate context.");
+	this->m_certificateContext = certificateContext;
+}
+
 Certificate::Certificate(Certificate&& cert) noexcept {
+	this->m_certificateContext = nullptr;
 	this->operator= (std::move(cert));
 }
 
