@@ -156,6 +156,18 @@ std::int32_t CertificateStore::GetCertificateCount() const {
 	return count;
 }
 
+std::vector<Certificate> CertificateStore::GetCertificates() const {
+
+	HCERTSTORE hCertStore = reinterpret_cast<HCERTSTORE>(this->m_hCertStore);
+
+	PCCERT_CONTEXT pCertContext = NULL;
+	std::vector<Certificate> certificates = { };
+	while (pCertContext = CertEnumCertificatesInStore(hCertStore, pCertContext))
+		certificates.push_back({ pCertContext, false, nullptr });
+
+	return certificates;
+}
+
 std::optional<Certificate> CertificateStore::EnumCertificates(const std::function<bool(const Certificate&)> fn) const {
 
 	HCERTSTORE hCertStore = reinterpret_cast<HCERTSTORE>(this->m_hCertStore);

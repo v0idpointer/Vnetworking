@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <optional>
 #include <functional>
+#include <vector>
 
 namespace Vnetworking::Security {
 
@@ -46,6 +47,7 @@ namespace Vnetworking::Security {
 		void DeleteCertificate(const Certificate& cert);
 
 		std::int32_t GetCertificateCount(void) const;
+		std::vector<Certificate> GetCertificates(void) const;
 		std::optional<Certificate> EnumCertificates(const std::function<bool(const Certificate&)> fn) const;
 
 	};
