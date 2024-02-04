@@ -7,9 +7,9 @@
 #define _NE_SECURITY_CERTIFICATESTORE_H_
 
 #include <Vnetworking/Exports.h>
-#include <Vnetworking/Security/Certificate.h>
-#include <Vnetworking/Security/CertificateStoreName.h>
-#include <Vnetworking/Security/CertificateStoreLocation.h>
+#include <Vnetworking/Security/Certificates/Certificate.h>
+#include <Vnetworking/Security/Certificates/CertificateStoreName.h>
+#include <Vnetworking/Security/Certificates/CertificateStoreLocation.h>
 
 #include <string>
 #include <cstdint>
@@ -18,7 +18,7 @@
 #include <functional>
 #include <vector>
 
-namespace Vnetworking::Security {
+namespace Vnetworking::Security::Certificates {
 
 	typedef void* NativeCertificateStoreHandle_t;
 

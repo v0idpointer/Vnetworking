@@ -10,7 +10,7 @@
 
 #include <cstdint>
 
-namespace Vnetworking::Security {
+namespace Vnetworking::Security::Certificates {
 
 	enum class VNETSECURITYAPI CertificateStoreName : std::uint32_t {
 

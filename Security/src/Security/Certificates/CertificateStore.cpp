@@ -1,4 +1,4 @@
-#include <Vnetworking/Security/CertificateStore.h>
+#include <Vnetworking/Security/Certificates/CertificateStore.h>
 #include <Vnetworking/Security/SecurityException.h>
 
 #include <unordered_map>
@@ -11,6 +11,7 @@
 #pragma comment (lib, "crypt32.lib")
 
 using namespace Vnetworking::Security;
+using namespace Vnetworking::Security::Certificates;
 
 static const std::unordered_map<CertificateStoreLocation, DWORD> s_storeLocations = {
 

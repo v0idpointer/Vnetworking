@@ -16,7 +16,7 @@
 #include <chrono>
 #include <utility>
 
-namespace Vnetworking::Security {
+namespace Vnetworking::Security::Certificates {
 
 	typedef const void* NativeCertificateContext_t;
 

@@ -1,4 +1,4 @@
-#include <Vnetworking/Security/Certificate.h>
+#include <Vnetworking/Security/Certificates/Certificate.h>
 #include <Vnetworking/Security/SecurityException.h>
 
 #include <fstream>
@@ -12,6 +12,7 @@
 #pragma comment (lib, "crypt32.lib")
 
 using namespace Vnetworking::Security;
+using namespace Vnetworking::Security::Certificates;
 
 static std::vector<std::uint8_t> ReadBinaryFile(const std::filesystem::path& path) {
 

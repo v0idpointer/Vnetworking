@@ -8,7 +8,7 @@
 
 #include <Vnetworking/Exports.h>
 
-namespace Vnetworking::Security {
+namespace Vnetworking::Security::Certificates {
 
 	enum class VNETSECURITYAPI CertificateStoreLocation : std::uint32_t {
 
