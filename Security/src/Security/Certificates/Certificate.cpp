@@ -86,6 +86,9 @@ Certificate::Certificate(const std::vector<std::uint8_t>& data, const std::strin
 Certificate::Certificate(const std::filesystem::path& path, const std::string& password)
 	: Certificate(ReadBinaryFile(path), password) { }
 
+Certificate::Certificate(const NativeCertificateContext_t certificateContext, const std::nullptr_t)
+	: Certificate(certificateContext, true, nullptr) { }
+
 Certificate::Certificate(const NativeCertificateContext_t certificateContext, const bool takeOwnership, const std::nullptr_t) {
 
 	if (certificateContext == nullptr)

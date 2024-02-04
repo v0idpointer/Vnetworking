@@ -30,6 +30,7 @@ namespace Vnetworking::Security::Certificates {
 		Certificate(const std::filesystem::path& path);
 		Certificate(const std::vector<std::uint8_t>& data, const std::string& password);
 		Certificate(const std::filesystem::path& path, const std::string& password);
+		Certificate(const NativeCertificateContext_t certificateContext, const std::nullptr_t);
 		Certificate(const NativeCertificateContext_t certificateContext, const bool takeOwnership, const std::nullptr_t);
 		Certificate(const Certificate& cert);
 		Certificate(Certificate&& cert) noexcept;
