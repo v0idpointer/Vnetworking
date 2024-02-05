@@ -64,7 +64,7 @@ Socket::Socket(const NativeSocket_t socket, const AddressFamily af, const Socket
 	: m_socket(socket), m_af(af), m_type(type), m_proto(proto) { }
 
 Socket::Socket(const AddressFamily af, const SocketType type, const ProtocolType proto) :
-	m_af(af), m_type(type), m_proto(proto) { 
+	m_socket(INVALID_SOCKET_HANDLE), m_af(af), m_type(type), m_proto(proto) {
 	
 	std::int32_t addressFamily = -1;
 	std::int32_t socketType = -1;
@@ -80,21 +80,38 @@ Socket::Socket(const AddressFamily af, const SocketType type, const ProtocolType
 
 }
 
-Socket::Socket(Socket&& other) noexcept : m_af(other.m_af), m_type(other.m_type), m_proto(other.m_proto) {
-	this->m_socket = other.m_socket;
-	other.m_socket = INVALID_SOCKET_HANDLE;
+Socket::Socket(Socket&& other) noexcept {
+	this->m_socket = INVALID_SOCKET_HANDLE;
+	this->operator= (std::move(other));
 }
 
 Socket::~Socket() { 
 	this->Close();
 }
 
+Socket& Socket::operator= (Socket&& socket) noexcept {
+
+	if (this->m_socket != INVALID_SOCKET_HANDLE)
+		this->Close();
+
+	this->m_af = socket.m_af;
+	this->m_type = socket.m_type;
+	this->m_proto = socket.m_proto;
+	this->m_socket = socket.m_socket;
+
+	socket.m_socket = INVALID_SOCKET_HANDLE;
+
+	return static_cast<Socket&>(*this);
+}
+
 bool Socket::operator== (const Socket& socket) const {
-	return (
-		(this->m_af == socket.m_af) && 
-		(this->m_type == socket.m_type) && 
-		(this->m_proto == socket.m_proto) && 
-		(this->m_socket == socket.m_socket));
+
+	if (this->m_af != socket.m_af) return false;
+	if (this->m_type != socket.m_type) return false;
+	if (this->m_proto == socket.m_proto) return false;
+	if (this->m_socket == socket.m_socket) return false;
+
+	return true;
 }
 
 AddressFamily Socket::GetAddressFamily() const {

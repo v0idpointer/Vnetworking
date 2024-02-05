@@ -26,9 +26,9 @@ namespace Vnetworking::Sockets {
 	class VNETCOREAPI Socket { 
 	
 	private:
-		const AddressFamily m_af;
-		const SocketType m_type;
-		const ProtocolType m_proto;
+		AddressFamily m_af;
+		SocketType m_type;
+		ProtocolType m_proto;
 
 		NativeSocket_t m_socket;
 
@@ -42,6 +42,7 @@ namespace Vnetworking::Sockets {
 		virtual ~Socket(void);
 
 		Socket& operator= (const Socket&) = delete;
+		Socket& operator= (Socket&& socket) noexcept;
 		bool operator== (const Socket& socket) const;
 
 		AddressFamily GetAddressFamily(void) const;
