@@ -1,10 +1,31 @@
 #include <Vnetworking/Security/SecurityContext.h>
 #include "Schannel.h"
 
+#include <map>
+#include <exception>
+#include <stdexcept>
+
 using namespace Vnetworking::Security;
 using namespace Vnetworking::Security::Private;
 using namespace Vnetworking::Security::Certificates;
 using namespace Vnetworking::Sockets;
+
+static std::map<std::pair<SecurityProtocol, ApplicationRole>, DWORD> s_configurations = { 
+
+	{ { SecurityProtocol::SSL_2_0, ApplicationRole::SERVER }, SP_PROT_SSL2_SERVER },
+	{ { SecurityProtocol::SSL_2_0, ApplicationRole::CLIENT }, SP_PROT_SSL2_CLIENT },
+	{ { SecurityProtocol::SSL_3_0, ApplicationRole::SERVER }, SP_PROT_SSL3_SERVER },
+	{ { SecurityProtocol::SSL_3_0, ApplicationRole::CLIENT }, SP_PROT_SSL3_CLIENT },
+	{ { SecurityProtocol::TLS_1_0, ApplicationRole::SERVER }, SP_PROT_TLS1_0_SERVER },
+	{ { SecurityProtocol::TLS_1_0, ApplicationRole::CLIENT }, SP_PROT_TLS1_0_CLIENT },
+	{ { SecurityProtocol::TLS_1_1, ApplicationRole::SERVER }, SP_PROT_TLS1_1_SERVER },
+	{ { SecurityProtocol::TLS_1_1, ApplicationRole::CLIENT }, SP_PROT_TLS1_1_CLIENT },
+	{ { SecurityProtocol::TLS_1_2, ApplicationRole::SERVER }, SP_PROT_TLS1_2_SERVER },
+	{ { SecurityProtocol::TLS_1_2, ApplicationRole::CLIENT }, SP_PROT_TLS1_2_CLIENT },
+	{ { SecurityProtocol::TLS_1_3, ApplicationRole::SERVER }, SP_PROT_TLS1_3_SERVER },
+	{ { SecurityProtocol::TLS_1_3, ApplicationRole::CLIENT }, SP_PROT_TLS1_3_CLIENT },
+
+};
 
 SecurityContext::SecurityContext(const std::optional<Certificate>& cert, const SecurityProtocol protocol, const ApplicationRole role) {
 	
@@ -12,6 +33,27 @@ SecurityContext::SecurityContext(const std::optional<Certificate>& cert, const S
 	this->m_cert = cert;
 	this->m_protocol = protocol;
 	this->m_role = role;
+
+	std::uint32_t mask = 1;
+	std::uint32_t enabledProtocols = 0;
+	const std::uint32_t protocols = static_cast<std::uint32_t>(protocol);
+
+	while (mask) {
+
+		if (protocols & mask) {
+
+			SecurityProtocol prot = static_cast<SecurityProtocol>(mask);
+			if (!s_configurations.contains({ prot, this->m_role }))
+				throw std::invalid_argument("Invalid security protocol / application role configuration.");
+
+			enabledProtocols |= s_configurations.at({ prot, this->m_role });
+
+		}
+
+		mask <<= 1;
+		if (mask >= 0xFFFF) break;
+
+	}
 
 	PCCERT_CONTEXT pCertContext = NULL;
 	if (this->m_cert.has_value())
@@ -23,14 +65,14 @@ SecurityContext::SecurityContext(const std::optional<Certificate>& cert, const S
 	TimeStamp ts;
 
 	cred.dwVersion = SCHANNEL_CRED_VERSION;
-	cred.grbitEnabledProtocols = static_cast<DWORD>(SP_PROT_TLS1_2_SERVER);
+	cred.grbitEnabledProtocols = static_cast<DWORD>(enabledProtocols);
 	cred.paCred = &pCertContext;
 	cred.cCreds = (this->m_cert.has_value() ? 1 : 0);
 
 	status = AcquireCredentialsHandleA(
 		NULL,
 		const_cast<LPSTR>(UNISP_NAME_A),
-		SECPKG_CRED_INBOUND,
+		((this->m_role == ApplicationRole::SERVER) ? SECPKG_CRED_INBOUND : SECPKG_CRED_OUTBOUND),
 		NULL,
 		&cred,
 		NULL,
