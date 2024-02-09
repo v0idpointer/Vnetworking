@@ -158,7 +158,12 @@
     <ClCompile Include="src\DllMain.cpp" />
     <ClCompile Include="src\Security\Certificates\Certificate.cpp" />
     <ClCompile Include="src\Security\Certificates\CertificateStore.cpp" />
+    <ClCompile Include="src\Security\SecureConnection.cpp" />
+    <ClCompile Include="src\Security\SecurityContext.cpp" />
     <ClCompile Include="src\Security\SecurityException.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Security\Schannel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
