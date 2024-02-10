@@ -132,3 +132,74 @@ std::vector<std::uint8_t> SecureConnection::Encrypt(const std::vector<std::uint8
 
 	return message;
 }
+
+static std::vector<std::uint8_t> DecryptChunk(SecHandle& securityContext, const std::uint8_t* const encryptedData, const std::uint32_t chunkLength) {
+
+	const SecPkgContext_StreamSizes streamSizes = GetStreamSizes(securityContext);
+	if (chunkLength > streamSizes.cbMaximumMessage)
+		throw std::length_error("The length of the data buffer exceeds the maximum allowable size for decryption.");
+
+	SecBuffer securityBuffer[4] = { 0 };
+	SecBufferDesc securityBufferDesc = { 0 };
+	std::vector<std::uint8_t> encrypted(chunkLength);
+
+	InitializeSecurityBuffer(securityBuffer[0], SECBUFFER_DATA, static_cast<std::uint32_t>(encrypted.size()), encrypted.data());
+	InitializeSecurityBuffer(securityBuffer[1], SECBUFFER_EMPTY, NULL, NULL);
+	InitializeSecurityBuffer(securityBuffer[2], SECBUFFER_EMPTY, NULL, NULL);
+	InitializeSecurityBuffer(securityBuffer[3], SECBUFFER_EMPTY, NULL, NULL);
+	InitializeSecurityBufferDesc(securityBufferDesc, SECBUFFER_VERSION, 4, securityBuffer);
+
+	memcpy_s(encrypted.data(), encrypted.size(), encryptedData, chunkLength);
+
+	SECURITY_STATUS status = DecryptMessage(
+		&securityContext,
+		&securityBufferDesc,
+		NULL,
+		NULL
+	);
+
+	if (status != SEC_E_OK)
+		throw SecurityException(static_cast<std::int32_t>(status));
+
+	std::vector<std::uint8_t> decrypted(securityBuffer[1].cbBuffer);
+	memcpy_s(decrypted.data(), decrypted.size(), securityBuffer[1].pvBuffer, securityBuffer[1].cbBuffer);
+
+	return decrypted;
+}
+
+std::vector<std::uint8_t> SecureConnection::Decrypt(const std::vector<std::uint8_t>& data) const {
+
+	SecHandle securityContext = { 0 };
+	ToSchannelHandle(this->m_securityContext, securityContext);
+	
+	const SecPkgContext_StreamSizes streamSizes = GetStreamSizes(securityContext);
+	if (static_cast<std::uint32_t>(data.size()) > streamSizes.cbMaximumMessage)
+		throw std::length_error("The length of the data buffer exceeds the maximum allowable size for decryption.");
+	
+	SecBuffer securityBuffer[4] = { 0 };
+	SecBufferDesc securityBufferDesc = { 0 };
+	std::vector<std::uint8_t> encrypted(data.size());
+
+	InitializeSecurityBuffer(securityBuffer[0], SECBUFFER_DATA, static_cast<std::uint32_t>(encrypted.size()), encrypted.data());
+	InitializeSecurityBuffer(securityBuffer[1], SECBUFFER_EMPTY, NULL, NULL);
+	InitializeSecurityBuffer(securityBuffer[2], SECBUFFER_EMPTY, NULL, NULL);
+	InitializeSecurityBuffer(securityBuffer[3], SECBUFFER_EMPTY, NULL, NULL);
+	InitializeSecurityBufferDesc(securityBufferDesc, SECBUFFER_VERSION, 4, securityBuffer);
+
+	memcpy_s(encrypted.data(), encrypted.size(), data.data(), data.size());
+
+	SECURITY_STATUS status = DecryptMessage(
+		&securityContext,
+		&securityBufferDesc,
+		NULL,
+		NULL
+	);
+
+	if (status != SEC_E_OK)
+		throw SecurityException(static_cast<std::int32_t>(status));
+
+	std::vector<std::uint8_t> decrypted(securityBuffer[1].cbBuffer);
+	memcpy_s(decrypted.data(), decrypted.size(), securityBuffer[1].pvBuffer, securityBuffer[1].cbBuffer);
+
+	return decrypted;
+}

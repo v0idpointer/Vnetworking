@@ -80,6 +80,32 @@ int main(int argc, char* argv[]) {
 		std::optional<SecureConnection> s = ctx->AcceptConnection(c.GetNativeSocketHandle());
 		if (!s.has_value()) continue;
 
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::vector<std::uint8_t> readData(c.GetAvailableBytes());
+		c.Receive(readData, readData.size());
+
+		try { readData = s->Decrypt(readData); }
+		catch (const SecurityException& ex) {
+			std::cout << ex.What() << "\n";
+			continue;
+		}
+
+		HttpRequest req = HttpRequest::Parse(readData, HttpVersion::HTTP_1_1);
+
+		std::cout << "Request URI: " << req.GetRequestUri().GetPath().value();
+		if (req.GetRequestUri().GetQuery())
+			std::cout << "?" << req.GetRequestUri().GetQuery().value();
+		std::cout << "\n";
+
+		for (const auto& [name, val] : req.GetHeaders())
+			std::cout << name << ": " << val << "\n";
+
+		if (req.GetPayload().size() > 0) {
+			for (const char ch : req.GetPayload())
+				std::cout << ch;
+		}
+		std::cout << "\n\n";
+
 		HttpResponse res = { HttpVersion::HTTP_1_1, HttpStatusCode::OK };
 		res.SetPayload(ToByteBuffer(HTML_TEXT));
 		res.GetHeaders().SetHeader("Content-Length", std::to_string(res.GetPayload().size()));

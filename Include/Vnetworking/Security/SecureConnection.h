@@ -36,6 +36,7 @@ namespace Vnetworking::Security {
 		bool operator== (const SecureConnection& secureConn) const;
 
 		std::vector<std::uint8_t> Encrypt(const std::vector<std::uint8_t>& data) const;
+		std::vector<std::uint8_t> Decrypt(const std::vector<std::uint8_t>& data) const;
 
 	};
 
