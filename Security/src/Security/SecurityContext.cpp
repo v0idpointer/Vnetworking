@@ -141,6 +141,18 @@ NativeSecurityContext_t SecurityContext::GetNativeSecurityContext() const {
 	return this->m_credentialsHandle;
 }
 
+const std::optional<Certificate>& SecurityContext::GetCertificate() const {
+	return this->m_cert;
+}
+
+SecurityProtocol SecurityContext::GetSecurityProtocol() const {
+	return this->m_protocol;
+}
+
+ApplicationRole SecurityContext::GetApplicationRole() const {
+	return this->m_role;
+}
+
 std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSocket_t socket, SecurityException& ex) const {
 
 	if (this->m_role != ApplicationRole::SERVER)

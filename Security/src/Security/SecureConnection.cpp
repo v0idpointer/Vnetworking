@@ -56,6 +56,10 @@ bool SecureConnection::operator== (const SecureConnection& secureConn) const {
 	return true;
 }
 
+NativeSecurityContext_t SecureConnection::GetNativeSecurityContext() const {
+	return this->m_securityContext;
+}
+
 static SecPkgContext_StreamSizes GetStreamSizes(SecHandle& securityContext) {
 
 	SecPkgContext_StreamSizes streamSizes = { 0 };

@@ -35,11 +35,12 @@ namespace Vnetworking::Security {
 		SecureConnection& operator= (SecureConnection&& secureConn) noexcept;
 		bool operator== (const SecureConnection& secureConn) const;
 
+		NativeSecurityContext_t GetNativeSecurityContext(void) const;
+
 		std::vector<std::uint8_t> Encrypt(const std::vector<std::uint8_t>& data) const;
 		std::vector<std::uint8_t> EncryptLargeMessage(const std::vector<std::uint8_t>& data) const;
 		std::vector<std::uint8_t> Decrypt(const std::vector<std::uint8_t>& data) const;
 		// TODO: std::vector<std::uint8_t> DecryptLargeMessage(const std::vector<std::uint8_t>& data) const;
-
 
 	};
 

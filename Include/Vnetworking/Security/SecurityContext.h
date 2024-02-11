@@ -38,9 +38,13 @@ namespace Vnetworking::Security {
 
 		NativeSecurityContext_t GetNativeSecurityContext(void) const;
 
+		const std::optional<Certificates::Certificate>& GetCertificate(void) const;
+		SecurityProtocol GetSecurityProtocol(void) const;
+		ApplicationRole GetApplicationRole(void) const;
+
 		std::optional<SecureConnection> AcceptConnection(const Sockets::NativeSocket_t socket, SecurityException& ex) const;
 		std::optional<SecureConnection> AcceptConnection(const Sockets::NativeSocket_t socket) const;
-		// std::optional<SecureConnection> InitializeConnection(const Sockets::NativeSocket_t socket);
+		// TODO: std::optional<SecureConnection> InitializeConnection(const Sockets::NativeSocket_t socket);
 
 	};
 
