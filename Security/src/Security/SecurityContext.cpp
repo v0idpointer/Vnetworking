@@ -27,6 +27,13 @@ static std::map<std::pair<SecurityProtocol, ApplicationRole>, DWORD> s_configura
 
 };
 
+static std::map<AcceptConnectionFlags, DWORD> s_acceptConnectionFlags = {
+	
+	{ AcceptConnectionFlags::NONE, NULL },
+	{ AcceptConnectionFlags::MUTUAL_AUTHENTICATION, ASC_REQ_MUTUAL_AUTH },
+
+};
+
 SecurityContext::SecurityContext(const std::optional<Certificate>& cert, const SecurityProtocol protocol, const ApplicationRole role) {
 	
 	this->m_credentialsHandle = { 0 };
@@ -153,7 +160,33 @@ ApplicationRole SecurityContext::GetApplicationRole() const {
 	return this->m_role;
 }
 
-std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSocket_t socket, SecurityException& ex) const {
+static DWORD GetAcceptConnectionFlags(const AcceptConnectionFlags flags) {
+
+	DWORD dwFlags = 0;
+	std::uint32_t mask = 1;
+	const std::uint32_t selectedFlags = static_cast<std::uint32_t>(flags);
+
+	while (mask) {
+
+		if (selectedFlags & mask) {
+
+			AcceptConnectionFlags flag = static_cast<AcceptConnectionFlags>(mask);
+			if (!s_acceptConnectionFlags.contains(flag))
+				throw std::invalid_argument("Invalid flag provided.");
+
+			dwFlags |= s_acceptConnectionFlags.at(flag);
+
+		}
+
+		mask <<= 1;
+		if (mask >= 0xFFFF) break;
+
+	}
+
+	return dwFlags;
+}
+
+std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSocket_t socket, const AcceptConnectionFlags flags, SecurityException& ex) const {
 
 	if (this->m_role != ApplicationRole::SERVER)
 		throw std::runtime_error("A new connection can only be accepted by a server application.");
@@ -188,7 +221,7 @@ std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSo
 	InitializeSecurityBufferDesc(outputSecurityBufferDesc, SECBUFFER_VERSION, 3, outputSecurityBuffer);
 
 	// handshake:
-	DWORD contextRequirements = (ASC_REQ_ALLOCATE_MEMORY | ASC_REQ_CONFIDENTIALITY);
+	DWORD contextRequirements = (ASC_REQ_ALLOCATE_MEMORY | ASC_REQ_CONFIDENTIALITY | GetAcceptConnectionFlags(flags));
 	ULONG contextAttributes = 0;
 	TimeStamp ts = { 0 };
 
@@ -265,6 +298,15 @@ std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSo
 	SecureConnection secureConn = { nativeSecurityContext, nullptr };
 
 	return secureConn;
+}
+
+std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSocket_t socket, const AcceptConnectionFlags flags) const {
+	SecurityException ex = { 0 };
+	return this->AcceptConnection(socket, flags, ex);
+}
+
+std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSocket_t socket, SecurityException& ex) const {
+	return this->AcceptConnection(socket, AcceptConnectionFlags::NONE, ex);
 }
 
 std::optional<SecureConnection> SecurityContext::AcceptConnection(const NativeSocket_t socket) const {

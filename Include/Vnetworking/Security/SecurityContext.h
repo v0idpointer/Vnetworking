@@ -9,9 +9,10 @@
 #include <Vnetworking/Exports.h>
 #include <Vnetworking/Security/ApplicationRole.h>
 #include <Vnetworking/Security/SecurityProtocol.h>
-#include <Vnetworking/Security/Certificates/Certificate.h>
 #include <Vnetworking/Security/SecureConnection.h>
 #include <Vnetworking/Security/SecurityException.h>
+#include <Vnetworking/Security/AcceptConnectionFlags.h>
+#include <Vnetworking/Sockets/Socket.h>
 
 #include <optional>
 
@@ -42,9 +43,12 @@ namespace Vnetworking::Security {
 		SecurityProtocol GetSecurityProtocol(void) const;
 		ApplicationRole GetApplicationRole(void) const;
 
+		std::optional<SecureConnection> AcceptConnection(const Sockets::NativeSocket_t socket, const AcceptConnectionFlags flags, SecurityException& ex) const;
+		std::optional<SecureConnection> AcceptConnection(const Sockets::NativeSocket_t socket, const AcceptConnectionFlags flags) const;
 		std::optional<SecureConnection> AcceptConnection(const Sockets::NativeSocket_t socket, SecurityException& ex) const;
 		std::optional<SecureConnection> AcceptConnection(const Sockets::NativeSocket_t socket) const;
-		// TODO: std::optional<SecureConnection> InitializeConnection(const Sockets::NativeSocket_t socket);
+
+		// TODO: std::optional<SecureConnection> InitializeConnection(const Sockets::NativeSocket_t socket, const InitializeConnectionFlags flags, SecurityException& ex) const;
 
 	};
 

@@ -44,8 +44,8 @@ static inline std::vector<std::uint8_t> ToByteBuffer(const std::string& str) noe
 
 int main(int argc, char* argv[]) {
 
-	const std::filesystem::path certPath = R"(C:\Users\Mastermind\Desktop\test.pfx)";
-	const std::string certPassword = "aaa";
+	const std::filesystem::path certPath = R"(C:\Users\Mastermind\Desktop\server.pfx)";
+	const std::string certPassword = "test";
 	const Port port = 443;
 
 	std::optional<Socket> socket;
@@ -77,8 +77,20 @@ int main(int argc, char* argv[]) {
 	while (true) {
 
 		Socket c = socket->Accept();
-		std::optional<SecureConnection> s = ctx->AcceptConnection(c.GetNativeSocketHandle());
+		std::optional<SecureConnection> s = ctx->AcceptConnection(c.GetNativeSocketHandle(), AcceptConnectionFlags::MUTUAL_AUTHENTICATION);
 		if (!s.has_value()) continue;
+
+		std::cout << "Local Certificate: ";
+		try { std::cout << s->GetCertificate().GetSubject() << "\n"; }
+		catch (const SecurityException& ex) {
+			std::cout << ex.What() << "\n";
+		}
+
+		std::cout << "Remote Certificate: ";
+		try { std::cout << s->GetPeerCertificate().GetSubject() << "\n"; }
+		catch (const SecurityException& ex) {
+			std::cout << ex.What() << "\n";
+		}
 
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::vector<std::uint8_t> readData(c.GetAvailableBytes());

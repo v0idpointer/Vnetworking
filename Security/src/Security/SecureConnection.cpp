@@ -7,6 +7,7 @@
 
 using namespace Vnetworking::Security;
 using namespace Vnetworking::Security::Private;
+using namespace Vnetworking::Security::Certificates;
 
 SecureConnection::SecureConnection(const NativeSecurityContext_t securityContext, const std::nullptr_t) {
 	
@@ -185,4 +186,40 @@ std::vector<std::uint8_t> SecureConnection::Decrypt(const std::vector<std::uint8
 	ToSchannelHandle(this->m_securityContext, securityContext);
 	
 	return DecryptData(securityContext, data.data(), static_cast<std::uint32_t>(data.size()));
+}
+
+Certificate SecureConnection::GetCertificate() const {
+
+	SecHandle securityContext = { 0 };
+	ToSchannelHandle(this->m_securityContext, securityContext);
+
+	PCCERT_CONTEXT pCertContext = NULL;
+	SECURITY_STATUS status = QueryContextAttributesA(
+		&securityContext,
+		SECPKG_ATTR_LOCAL_CERT_CONTEXT,
+		&pCertContext
+	);
+
+	if (status != SEC_E_OK)
+		throw SecurityException(static_cast<std::int32_t>(status));
+
+	return Certificate(pCertContext, true, nullptr);
+}
+
+Certificate SecureConnection::GetPeerCertificate() const {
+
+	SecHandle securityContext = { 0 };
+	ToSchannelHandle(this->m_securityContext, securityContext);
+
+	PCCERT_CONTEXT pCertContext = NULL;
+	SECURITY_STATUS status = QueryContextAttributesA(
+		&securityContext,
+		SECPKG_ATTR_REMOTE_CERT_CONTEXT,
+		&pCertContext
+	);
+
+	if (status != SEC_E_OK)
+		throw SecurityException(static_cast<std::int32_t>(status));
+
+	return Certificate(pCertContext, true, nullptr);
 }

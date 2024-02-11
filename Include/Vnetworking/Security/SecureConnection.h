@@ -7,7 +7,7 @@
 #define _NE_SECURITY_SECURECONNECTION_H_
 
 #include <Vnetworking/Exports.h>
-#include <Vnetworking/Sockets/Socket.h>
+#include <Vnetworking/Security/Certificates/Certificate.h>
 
 #include <cstdint>
 #include <cstddef>
@@ -41,6 +41,9 @@ namespace Vnetworking::Security {
 		std::vector<std::uint8_t> EncryptLargeMessage(const std::vector<std::uint8_t>& data) const;
 		std::vector<std::uint8_t> Decrypt(const std::vector<std::uint8_t>& data) const;
 		// TODO: std::vector<std::uint8_t> DecryptLargeMessage(const std::vector<std::uint8_t>& data) const;
+
+		Certificates::Certificate GetCertificate(void) const;
+		Certificates::Certificate GetPeerCertificate(void) const;
 
 	};
 
