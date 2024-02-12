@@ -330,3 +330,29 @@ std::vector<std::uint8_t> Certificate::GetPublicKeyParams() const {
 
 	return data;
 }
+
+void Certificate::ExportCertificate(std::vector<std::uint8_t>& buffer) const {
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+
+	buffer.resize(pCertContext->cbCertEncoded);
+	memcpy_s(buffer.data(), buffer.size(), pCertContext->pbCertEncoded, pCertContext->cbCertEncoded);
+
+}
+
+void Certificate::ExportCertificate(const std::filesystem::path& path) const {
+
+	std::vector<std::uint8_t> data = { };
+	this->ExportCertificate(data);
+
+	std::ofstream file;
+	file.exceptions(std::ios::badbit | std::ios::failbit);
+
+	file.open(path, std::ios::binary);
+	file.seekp(0, std::ios::beg);
+	file.write(reinterpret_cast<const char*>(data.data()), data.size());
+	file.close();
+
+	data.clear();
+
+}

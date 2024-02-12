@@ -54,6 +54,9 @@ namespace Vnetworking::Security::Certificates {
 		std::vector<std::uint8_t> GetPublicKey(void) const;
 		std::vector<std::uint8_t> GetPublicKeyParams(void) const;
 
+		void ExportCertificate(std::vector<std::uint8_t>& buffer) const;
+		void ExportCertificate(const std::filesystem::path& path) const;
+
 	};
 
 }
