@@ -14,8 +14,6 @@
 #include <Vnetworking/Security/AcceptConnectionFlags.h>
 #include <Vnetworking/Sockets/Socket.h>
 
-#include <optional>
-
 namespace Vnetworking::Security {
 
 	class VNETSECURITYAPI SecurityContext {

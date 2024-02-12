@@ -80,17 +80,11 @@ int main(int argc, char* argv[]) {
 		std::optional<SecureConnection> s = ctx->AcceptConnection(c.GetNativeSocketHandle(), AcceptConnectionFlags::MUTUAL_AUTHENTICATION);
 		if (!s.has_value()) continue;
 
-		std::cout << "Local Certificate: ";
-		try { std::cout << s->GetCertificate().GetSubject() << "\n"; }
-		catch (const SecurityException& ex) {
-			std::cout << ex.What() << "\n";
-		}
-
-		std::cout << "Remote Certificate: ";
-		try { std::cout << s->GetPeerCertificate().GetSubject() << "\n"; }
-		catch (const SecurityException& ex) {
-			std::cout << ex.What() << "\n";
-		}
+		const std::optional<Certificate> local = s->GetCertificate();
+		const std::optional<Certificate> remote = s->GetPeerCertificate();
+		
+		std::cout << "Local Certificate: " << (local ? local->GetSubject() : "/") << "\n";
+		std::cout << "Remote Certificate: " << (remote ? remote->GetSubject() : "/") << "\n";
 
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		std::vector<std::uint8_t> readData(c.GetAvailableBytes());

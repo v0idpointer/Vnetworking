@@ -188,7 +188,7 @@ std::vector<std::uint8_t> SecureConnection::Decrypt(const std::vector<std::uint8
 	return DecryptData(securityContext, data.data(), static_cast<std::uint32_t>(data.size()));
 }
 
-Certificate SecureConnection::GetCertificate() const {
+std::optional<Certificate> SecureConnection::GetCertificate() const {
 
 	SecHandle securityContext = { 0 };
 	ToSchannelHandle(this->m_securityContext, securityContext);
@@ -200,13 +200,15 @@ Certificate SecureConnection::GetCertificate() const {
 		&pCertContext
 	);
 
-	if (status != SEC_E_OK)
-		throw SecurityException(static_cast<std::int32_t>(status));
+	if (status != SEC_E_OK) {
+		if (status == SEC_E_NO_CREDENTIALS) return std::nullopt;
+		else throw SecurityException(static_cast<std::int32_t>(status));
+	}
 
 	return Certificate(pCertContext, true, nullptr);
 }
 
-Certificate SecureConnection::GetPeerCertificate() const {
+std::optional<Certificate> SecureConnection::GetPeerCertificate() const {
 
 	SecHandle securityContext = { 0 };
 	ToSchannelHandle(this->m_securityContext, securityContext);
@@ -218,8 +220,10 @@ Certificate SecureConnection::GetPeerCertificate() const {
 		&pCertContext
 	);
 
-	if (status != SEC_E_OK)
-		throw SecurityException(static_cast<std::int32_t>(status));
+	if (status != SEC_E_OK) {
+		if (status == SEC_E_NO_CREDENTIALS) return std::nullopt;
+		else throw SecurityException(static_cast<std::int32_t>(status));
+	}
 
 	return Certificate(pCertContext, true, nullptr);
 }

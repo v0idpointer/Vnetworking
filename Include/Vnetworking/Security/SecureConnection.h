@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <vector>
+#include <optional>
 
 namespace Vnetworking::Security {
 
@@ -42,8 +43,8 @@ namespace Vnetworking::Security {
 		std::vector<std::uint8_t> Decrypt(const std::vector<std::uint8_t>& data) const;
 		// TODO: std::vector<std::uint8_t> DecryptLargeMessage(const std::vector<std::uint8_t>& data) const;
 
-		Certificates::Certificate GetCertificate(void) const;
-		Certificates::Certificate GetPeerCertificate(void) const;
+		std::optional<Certificates::Certificate> GetCertificate(void) const;
+		std::optional<Certificates::Certificate> GetPeerCertificate(void) const;
 
 	};
 
