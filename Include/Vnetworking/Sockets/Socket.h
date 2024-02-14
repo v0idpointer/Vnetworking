@@ -52,35 +52,35 @@ namespace Vnetworking::Sockets {
 		NativeSocket_t GetNativeSocketHandle(void) const;
 
 		void Close(void);
-		void Shutdown(const ShutdownSocket how);
+		void Shutdown(const ShutdownSocket how) const;
 	
-		void Bind(const ISocketAddress& sockaddr);
-		void Connect(const ISocketAddress& sockaddr);
+		void Bind(const ISocketAddress& sockaddr) const;
+		void Connect(const ISocketAddress& sockaddr) const;
 
-		void Listen(void);
-		void Listen(const std::int32_t backlog);
-		Socket Accept(void);
+		void Listen(void) const;
+		void Listen(const std::int32_t backlog) const;
+		Socket Accept(void) const;
 
-		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags);
-		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags);
-		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t size);
+		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t size) const;
 
-		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags);
-		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags);
-		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t size);
+		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t size) const;
 
-		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr);
-		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr);
-		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t size, const ISocketAddress& sockaddr);
+		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr) const;
+		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr) const;
+		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t size, const ISocketAddress& sockaddr) const;
 
-		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr);
-		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr);
-		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t size, ISocketAddress& sockaddr);
+		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr) const;
+		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr) const;
+		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t size, ISocketAddress& sockaddr) const;
 
-		std::int32_t GetAvailableBytes(void);
+		std::int32_t GetAvailableBytes(void) const;
 
-		void GetSocketAddress(ISocketAddress& sockaddr);
-		void GetPeerAddress(ISocketAddress& sockaddr);
+		void GetSocketAddress(ISocketAddress& sockaddr) const;
+		void GetPeerAddress(ISocketAddress& sockaddr) const;
 
 	};
 

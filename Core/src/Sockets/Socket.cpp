@@ -139,7 +139,7 @@ void Socket::Close() {
 
 }
 
-void Socket::Shutdown(const ShutdownSocket how) {
+void Socket::Shutdown(const ShutdownSocket how) const {
 
 	int sd = 0;
 	switch (how) {
@@ -252,9 +252,9 @@ static std::int32_t CreateFlags(const SocketFlags flags) noexcept {
 	return nf;
 }
 
-void Socket::Bind(const ISocketAddress& sockaddr) {
+void Socket::Bind(const ISocketAddress& sockaddr) const {
 
-	struct addrinfo* result = CreateNativeAddrinfo(static_cast<Socket&>(*this), sockaddr);
+	struct addrinfo* result = CreateNativeAddrinfo(static_cast<const Socket&>(*this), sockaddr);
 
 	int res = bind(this->m_socket, result->ai_addr, static_cast<int>(result->ai_addrlen));
 	if (res) {
@@ -266,9 +266,9 @@ void Socket::Bind(const ISocketAddress& sockaddr) {
 
 }
 
-void Socket::Connect(const ISocketAddress& sockaddr) {
+void Socket::Connect(const ISocketAddress& sockaddr) const {
 
-	struct addrinfo* result = CreateNativeAddrinfo(static_cast<Socket&>(*this), sockaddr);
+	struct addrinfo* result = CreateNativeAddrinfo(static_cast<const Socket&>(*this), sockaddr);
 
 	int res = connect(this->m_socket, result->ai_addr, static_cast<int>(result->ai_addrlen));
 	if (res) {
@@ -280,16 +280,16 @@ void Socket::Connect(const ISocketAddress& sockaddr) {
 
 }
 
-void Socket::Listen() {
+void Socket::Listen() const {
 	this->Listen(SOMAXCONN);
 }
 
-void Socket::Listen(const std::int32_t backlog) {
+void Socket::Listen(const std::int32_t backlog) const {
 	if (listen(this->m_socket, backlog) == SOCKET_ERROR)
 		throw SocketException(WSAGetLastError());
 }
 
-Socket Socket::Accept() {
+Socket Socket::Accept() const {
 
 	NativeSocket_t client = accept(this->m_socket, nullptr, nullptr);
 	if (client == INVALID_SOCKET)
@@ -298,7 +298,7 @@ Socket Socket::Accept() {
 	return Socket(client, this->GetAddressFamily(), this->GetSocketType(), this->GetProtocolType());
 }
 
-std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) {
+std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const {
 
 	if (offset < 0) 
 		throw std::out_of_range(ERR_OFFSET_LESS_THAN_ZERO.data());
@@ -321,15 +321,15 @@ std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int3
 	return sent;
 }
 
-std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) {
+std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const {
 	return this->Send(data, 0, size, flags);
 }
 
-std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t size) {
+std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t size) const {
 	return this->Send(data, 0, size, SocketFlags::NONE);
 }
 
-std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) {
+std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const {
 
 	if (offset < 0)
 		throw std::out_of_range(ERR_OFFSET_LESS_THAN_ZERO.data());
@@ -352,11 +352,11 @@ std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t
 	return read;
 }
 
-std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) {
+std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const {
 	return this->Receive(data, 0, size, flags);
 }
 
-std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t size) {
+std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t size) const {
 	return this->Receive(data, 0, size, SocketFlags::NONE);
 }
 
@@ -366,7 +366,7 @@ std::int32_t Socket::SendTo(
 	const std::int32_t size,
 	const SocketFlags flags,
 	const ISocketAddress& sockaddr
-) {
+) const {
 	
 	if (offset < 0)
 		throw std::out_of_range(ERR_OFFSET_LESS_THAN_ZERO.data());
@@ -382,7 +382,7 @@ std::int32_t Socket::SendTo(
 
 	const char* buffer = (reinterpret_cast<const char*>(data.data()) + offset);
 
-	struct addrinfo* result = CreateNativeAddrinfo(static_cast<Socket&>(*this), sockaddr);
+	struct addrinfo* result = CreateNativeAddrinfo(static_cast<const Socket&>(*this), sockaddr);
 	std::int32_t sent = sendto(this->m_socket, buffer, size, CreateFlags(flags), result->ai_addr, static_cast<int>(result->ai_addrlen));
 	if (sent == SOCKET_ERROR) {
 		freeaddrinfo(result);
@@ -399,7 +399,7 @@ std::int32_t Socket::SendTo(
 	const std::int32_t size,
 	const SocketFlags flags,
 	const ISocketAddress& sockaddr
-) {
+) const {
 	return this->SendTo(data, 0, size, flags, sockaddr);
 }
 
@@ -407,7 +407,7 @@ std::int32_t Socket::SendTo(
 	const std::vector<std::uint8_t>& data,
 	const std::int32_t size,
 	const ISocketAddress& sockaddr
-) {
+) const {
 	return this->SendTo(data, size, SocketFlags::NONE, sockaddr);
 }
 
@@ -417,7 +417,7 @@ std::int32_t Socket::ReceiveFrom(
 	const std::int32_t size, 
 	const SocketFlags flags, 
 	ISocketAddress& sockaddr
-) {
+) const {
 	
 	if (offset < 0)
 		throw std::out_of_range(ERR_OFFSET_LESS_THAN_ZERO.data());
@@ -440,7 +440,7 @@ std::int32_t Socket::ReceiveFrom(
 	if (read == SOCKET_ERROR)
 		throw SocketException(WSAGetLastError());
 
-	NativeSockaddrToISocketAddress(static_cast<Socket&>(*this), &sender, sockaddr);
+	NativeSockaddrToISocketAddress(static_cast<const Socket&>(*this), &sender, sockaddr);
 
 	return read;
 }
@@ -450,7 +450,7 @@ std::int32_t Socket::ReceiveFrom(
 	const std::int32_t size,
 	const SocketFlags flags,
 	ISocketAddress& sockaddr
-) {
+) const {
 	return this->ReceiveFrom(data, 0, size, flags, sockaddr);
 }
 
@@ -458,11 +458,11 @@ std::int32_t Socket::ReceiveFrom(
 	std::vector<std::uint8_t>& data,
 	const std::int32_t size,
 	ISocketAddress& sockaddr
-) {
+) const {
 	return this->ReceiveFrom(data, size, SocketFlags::NONE, sockaddr);
 }
 
-std::int32_t Socket::GetAvailableBytes() {
+std::int32_t Socket::GetAvailableBytes() const {
 
 	u_long argp = 0;
 	int res = ioctlsocket(this->m_socket, FIONREAD, &argp);
@@ -472,7 +472,7 @@ std::int32_t Socket::GetAvailableBytes() {
 	return static_cast<std::int32_t>(argp);
 }
 
-void Socket::GetSocketAddress(ISocketAddress& sockaddr) {
+void Socket::GetSocketAddress(ISocketAddress& sockaddr) const {
 
 	struct sockaddr sockName;
 	std::int32_t sockNameLen = sizeof(sockName);
@@ -480,11 +480,11 @@ void Socket::GetSocketAddress(ISocketAddress& sockaddr) {
 	if (getsockname(this->m_socket, &sockName, &sockNameLen))
 		throw SocketException(WSAGetLastError());
 
-	NativeSockaddrToISocketAddress(static_cast<Socket&>(*this), &sockName, sockaddr);
+	NativeSockaddrToISocketAddress(static_cast<const Socket&>(*this), &sockName, sockaddr);
 
 }
 
-void Socket::GetPeerAddress(ISocketAddress& sockaddr) {
+void Socket::GetPeerAddress(ISocketAddress& sockaddr) const {
 
 	struct sockaddr peerName;
 	std::int32_t peerNameLen = sizeof(peerName);
@@ -492,6 +492,6 @@ void Socket::GetPeerAddress(ISocketAddress& sockaddr) {
 	if (getpeername(this->m_socket, &peerName, &peerNameLen))
 		throw SocketException(WSAGetLastError());
 
-	NativeSockaddrToISocketAddress(static_cast<Socket&>(*this), &peerName, sockaddr);
+	NativeSockaddrToISocketAddress(static_cast<const Socket&>(*this), &peerName, sockaddr);
 
 }
