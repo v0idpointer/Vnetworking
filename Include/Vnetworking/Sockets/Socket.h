@@ -15,7 +15,7 @@
 #include <Vnetworking/Sockets/SocketFlags.h>
 
 #include <cstdint>
-#include <vector>
+#include <span>
 
 namespace Vnetworking::Sockets {
 
@@ -61,21 +61,21 @@ namespace Vnetworking::Sockets {
 		void Listen(const std::int32_t backlog) const;
 		Socket Accept(void) const;
 
-		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const;
-		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const;
-		std::int32_t Send(const std::vector<std::uint8_t>& data, const std::int32_t size) const;
+		std::int32_t Send(const std::span<const std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Send(const std::span<const std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Send(const std::span<const std::uint8_t>& data, const std::int32_t size) const;
 
-		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const;
-		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const;
-		std::int32_t Receive(std::vector<std::uint8_t>& data, const std::int32_t size) const;
+		std::int32_t Receive(const std::span<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Receive(const std::span<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const;
+		std::int32_t Receive(const std::span<std::uint8_t>& data, const std::int32_t size) const;
 
-		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr) const;
-		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr) const;
-		std::int32_t SendTo(const std::vector<std::uint8_t>& data, const std::int32_t size, const ISocketAddress& sockaddr) const;
+		std::int32_t SendTo(const std::span<const std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr) const;
+		std::int32_t SendTo(const std::span<const std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, const ISocketAddress& sockaddr) const;
+		std::int32_t SendTo(const std::span<const std::uint8_t>& data, const std::int32_t size, const ISocketAddress& sockaddr) const;
 
-		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr) const;
-		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr) const;
-		std::int32_t ReceiveFrom(std::vector<std::uint8_t>& data, const std::int32_t size, ISocketAddress& sockaddr) const;
+		std::int32_t ReceiveFrom(const std::span<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr) const;
+		std::int32_t ReceiveFrom(const std::span<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags, ISocketAddress& sockaddr) const;
+		std::int32_t ReceiveFrom(const std::span<std::uint8_t>& data, const std::int32_t size, ISocketAddress& sockaddr) const;
 
 		std::int32_t GetAvailableBytes(void) const;
 

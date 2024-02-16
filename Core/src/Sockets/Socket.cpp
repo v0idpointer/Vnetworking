@@ -303,7 +303,7 @@ Socket Socket::Accept() const {
 	return Socket(client, this->GetAddressFamily(), this->GetSocketType(), this->GetProtocolType());
 }
 
-std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const {
+std::int32_t Socket::Send(const std::span<const std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const {
 
 	if (offset < 0) 
 		throw std::out_of_range(ERR_OFFSET_LESS_THAN_ZERO.data());
@@ -326,15 +326,15 @@ std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int3
 	return sent;
 }
 
-std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const {
+std::int32_t Socket::Send(const std::span<const std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const {
 	return this->Send(data, 0, size, flags);
 }
 
-std::int32_t Socket::Send(const std::vector<std::uint8_t>& data, const std::int32_t size) const {
+std::int32_t Socket::Send(const std::span<const std::uint8_t>& data, const std::int32_t size) const {
 	return this->Send(data, 0, size, SocketFlags::NONE);
 }
 
-std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const {
+std::int32_t Socket::Receive(const std::span<std::uint8_t>& data, const std::int32_t offset, const std::int32_t size, const SocketFlags flags) const {
 
 	if (offset < 0)
 		throw std::out_of_range(ERR_OFFSET_LESS_THAN_ZERO.data());
@@ -357,16 +357,16 @@ std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t
 	return read;
 }
 
-std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const {
+std::int32_t Socket::Receive(const std::span<std::uint8_t>& data, const std::int32_t size, const SocketFlags flags) const {
 	return this->Receive(data, 0, size, flags);
 }
 
-std::int32_t Socket::Receive(std::vector<std::uint8_t>& data, const std::int32_t size) const {
+std::int32_t Socket::Receive(const std::span<std::uint8_t>& data, const std::int32_t size) const {
 	return this->Receive(data, 0, size, SocketFlags::NONE);
 }
 
 std::int32_t Socket::SendTo(
-	const std::vector<std::uint8_t>& data,
+	const std::span<const std::uint8_t>& data,
 	const std::int32_t offset,
 	const std::int32_t size,
 	const SocketFlags flags,
@@ -400,7 +400,7 @@ std::int32_t Socket::SendTo(
 }
 
 std::int32_t Socket::SendTo(
-	const std::vector<std::uint8_t>& data,
+	const std::span<const std::uint8_t>& data,
 	const std::int32_t size,
 	const SocketFlags flags,
 	const ISocketAddress& sockaddr
@@ -409,7 +409,7 @@ std::int32_t Socket::SendTo(
 }
 
 std::int32_t Socket::SendTo(
-	const std::vector<std::uint8_t>& data,
+	const std::span<const std::uint8_t>& data,
 	const std::int32_t size,
 	const ISocketAddress& sockaddr
 ) const {
@@ -417,7 +417,7 @@ std::int32_t Socket::SendTo(
 }
 
 std::int32_t Socket::ReceiveFrom(
-	std::vector<std::uint8_t>& data, 
+	const std::span<std::uint8_t>& data, 
 	const std::int32_t offset, 
 	const std::int32_t size, 
 	const SocketFlags flags, 
@@ -451,7 +451,7 @@ std::int32_t Socket::ReceiveFrom(
 }
 
 std::int32_t Socket::ReceiveFrom(
-	std::vector<std::uint8_t>& data,
+	const std::span<std::uint8_t>& data,
 	const std::int32_t size,
 	const SocketFlags flags,
 	ISocketAddress& sockaddr
@@ -460,7 +460,7 @@ std::int32_t Socket::ReceiveFrom(
 }
 
 std::int32_t Socket::ReceiveFrom(
-	std::vector<std::uint8_t>& data,
+	const std::span<std::uint8_t>& data,
 	const std::int32_t size,
 	ISocketAddress& sockaddr
 ) const {
