@@ -24,6 +24,7 @@ constexpr std::string_view ERR_SIZE_GREATER_THAN_BUFFERSIZE_MINUS_OFFSET = "'siz
 
 constexpr std::string_view ERR_BAD_ISOCKETADDRESS_IMPL = "Invalid ISocketAddress implementation.";
 constexpr std::string_view ERR_BAD_ADDRESSFAMILY = "Invalid AddressFamily and/or ISocketAddress implementation.";
+constexpr std::string_view ERR_BAD_SOCKET = "Invalid socket.";
 
 static const std::unordered_map<AddressFamily, std::int32_t> s_addressFamilies = { 
 
@@ -86,7 +87,8 @@ Socket::Socket(Socket&& other) noexcept {
 }
 
 Socket::~Socket() { 
-	this->Close();
+	if (this->m_socket != INVALID_SOCKET_HANDLE)
+		this->Close();
 }
 
 Socket& Socket::operator= (Socket&& socket) noexcept {
@@ -132,10 +134,13 @@ NativeSocket_t Socket::GetNativeSocketHandle() const {
 
 void Socket::Close() {
 	
-	if (this->m_socket != INVALID_SOCKET_HANDLE) {
-		closesocket(this->m_socket);
-		this->m_socket = INVALID_SOCKET_HANDLE;
-	}
+	if (this->m_socket == INVALID_SOCKET_HANDLE)
+		throw std::runtime_error(ERR_BAD_SOCKET.data());
+
+	if (closesocket(this->m_socket) == SOCKET_ERROR)
+		throw SocketException(static_cast<int>(WSAGetLastError()));
+
+	this->m_socket = INVALID_SOCKET_HANDLE;
 
 }
 
