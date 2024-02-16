@@ -13,6 +13,7 @@
 #include <Vnetworking/Sockets/ShutdownSocket.h>
 #include <Vnetworking/Sockets/ISocketAddress.h>
 #include <Vnetworking/Sockets/SocketFlags.h>
+#include <Vnetworking/Sockets/PollEvents.h>
 
 #include <cstdint>
 #include <span>
@@ -81,6 +82,8 @@ namespace Vnetworking::Sockets {
 
 		void GetSocketAddress(ISocketAddress& sockaddr) const;
 		void GetPeerAddress(ISocketAddress& sockaddr) const;
+
+		bool Poll(const PollEvents pollEvent, const std::int32_t timeout) const;
 
 	};
 

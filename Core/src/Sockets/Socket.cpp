@@ -14,6 +14,10 @@
 
 #pragma comment (lib, "WS2_32.lib")
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 using namespace Vnetworking::Sockets;
 
 // error messages for Send and Receive functions:
@@ -499,4 +503,41 @@ void Socket::GetPeerAddress(ISocketAddress& sockaddr) const {
 
 	NativeSockaddrToISocketAddress(static_cast<const Socket&>(*this), &peerName, sockaddr);
 
+}
+
+static std::int16_t ToNativePollEvent(const PollEvents pollEvent) {
+	
+	switch (pollEvent) {
+
+	case PollEvents::READ:
+		return POLLIN;
+		break;
+
+	case PollEvents::WRITE:
+		return POLLOUT;
+		break;
+
+	case PollEvents::ERROR:
+		return POLLERR;
+		break;
+
+	default:
+		return 0;
+		break;
+
+	}
+
+}
+
+bool Socket::Poll(const PollEvents pollEvent, const std::int32_t timeout) const {
+
+	WSAPOLLFD fd = { 0 };
+	fd.fd = this->m_socket;
+	fd.events = ToNativePollEvent(pollEvent);
+
+	int result = WSAPoll(&fd, 1, timeout);
+	if (result == -1)
+		throw SocketException(static_cast<int>(WSAGetLastError()));
+
+	return (result > 0);
 }
