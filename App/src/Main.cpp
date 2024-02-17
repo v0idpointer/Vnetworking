@@ -4,9 +4,9 @@
 #include <Vnetworking/ThreadPool.h>
 #include <Vnetworking/Uri.h>
 #include <Vnetworking/Dns/DNS.h>
-#include <Vnetworking/Http/HttpRequest.h>
-#include <Vnetworking/Http/HttpResponse.h>
-#include <Vnetworking/Http/HttpException.h>
+#include <Vnetworking/Http/HttpMethod.h>
+#include <Vnetworking/Http/HttpStatusCode.h>
+#include <Vnetworking/Http/HttpVersion.h>
 #include <Vnetworking/Sockets/Socket.h>
 #include <Vnetworking/Sockets/IpSocketAddress.h>
 #include <Vnetworking/Sockets/SocketException.h>
@@ -34,7 +34,7 @@ static inline std::vector<std::uint8_t> ToByteBuffer(const std::string& str) noe
 
 int main(int argc, char* argv[]) {
 
-	// ... 
+	
 
 	return 0;
 }
