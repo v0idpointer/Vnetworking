@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\BadUriException.cpp" />
     <ClCompile Include="src\DllMain.cpp" />
     <ClCompile Include="src\Http\HttpMethod.cpp" />
     <ClCompile Include="src\Http\HttpStatusCode.cpp" />

@@ -1,16 +1,25 @@
 #include <Vnetworking/Uri.h>
+#include <Vnetworking/BadUriException.h>
 
 #include <algorithm>
-#include <exception>
-#include <stdexcept>
 #include <sstream>
 
 using namespace Vnetworking;
 
+constexpr std::string_view ERR_URI_TOO_LONG = "URI too long.";
+constexpr std::string_view ERR_INVALID_CHARACTERS = "URI contains invalid character(s).";
+constexpr std::string_view ERR_SCHEME_MISSING = "URI scheme missing.";
+constexpr std::string_view ERR_EMPTY_SCHEME = "URI scheme cannot be an empty string.";
+constexpr std::string_view ERR_INVALID_CHAR_IN_SCHEME = "URI scheme contains invalid character(s).";
+constexpr std::string_view ERR_BAD_HOST_FMT = "Bad URI host format.";
+constexpr std::string_view ERR_URI_HOST_EMPTY = "URI host cannot be an empty string.";
+constexpr std::string_view ERR_NON_NUMERICAL_PORT = "URI port cannot be a non-numerical value.";
+constexpr std::string_view ERR_PATH_COMPONENT_MISSING = "URI path component missing.";
+
 Uri::Uri(const std::string& uriString) {
 	
 	if (uriString.length() >= 32768)
-		throw std::length_error("URI too long.");
+		throw BadUriException(ERR_URI_TOO_LONG.data());
 
 	// check if the uri contains invalid character(s):
 	std::string::const_iterator it = std::find_if(uriString.begin(), uriString.end(), [&] (const char ch) -> bool {
@@ -30,7 +39,7 @@ Uri::Uri(const std::string& uriString) {
 	});
 	
 	if (it != uriString.end())
-		throw std::invalid_argument("URI contains invalid character(s).");
+		throw BadUriException(ERR_INVALID_CHARACTERS.data());
 
 	// if the uri string starts with a forward slash, parse it as a relative uri.
 	// this is pretty much copy-paste path query and fragment parser.
@@ -69,7 +78,7 @@ Uri::Uri(const std::string& uriString) {
 
 	// parse the scheme:
 	if (uriString.find(':') == std::string::npos)
-		throw std::invalid_argument("URI scheme missing.");
+		throw BadUriException(ERR_SCHEME_MISSING.data());
 
 	std::string scheme = uriString.substr(0, uriString.find(':'));
 	it = std::find_if(scheme.begin(), scheme.end(), [&] (const char ch) -> bool {
@@ -77,8 +86,8 @@ Uri::Uri(const std::string& uriString) {
 		return true;
 	});
 
-	if (scheme.empty()) throw std::invalid_argument("URI scheme cannot be an empty string.");
-	if (it != scheme.end()) throw std::invalid_argument("URI scheme contains invalid character(s).");
+	if (scheme.empty()) throw BadUriException(ERR_EMPTY_SCHEME.data());
+	if (it != scheme.end()) throw BadUriException(ERR_INVALID_CHAR_IN_SCHEME.data());
 	std::transform(scheme.begin(), scheme.end(), scheme.begin(), [&] (const char ch) -> char {
 		return std::tolower(ch);
 	});
@@ -115,11 +124,11 @@ Uri::Uri(const std::string& uriString) {
 		if (isIpv6) {
 
 			if (authority.find(']') == std::string::npos)
-				throw std::invalid_argument("Bad URI host format.");
+				throw BadUriException(ERR_BAD_HOST_FMT.data());
 
 			addr = authority.substr(1, authority.find(']') - 1);
 			if(addr->empty())
-				throw std::invalid_argument("Bad URI host format.");
+				throw BadUriException(ERR_BAD_HOST_FMT.data());
 
 			authority = authority.substr(addr->length() + 2);
 			authority = ("0.0.0.0" + authority);
@@ -137,7 +146,7 @@ Uri::Uri(const std::string& uriString) {
 		// in authority with the stored address.
 		if (isIpv6) authority = ("[" + addr.value() + "]");
 
-		if (authority.empty()) throw std::invalid_argument("URI host cannot be an empty string.");
+		if (authority.empty()) throw BadUriException(ERR_URI_HOST_EMPTY.data());
 		std::transform(authority.begin(), authority.end(), authority.begin(), [&] (const char ch) -> char {
 			return std::tolower(ch);
 		});
@@ -149,7 +158,7 @@ Uri::Uri(const std::string& uriString) {
 			it = std::find_if(port.value().begin(), port.value().end(), [&] (const char ch) -> bool {
 				return (!std::isdigit(ch));
 			});
-			if (it != port.value().end()) throw std::invalid_argument("URI port cannot be a non-numerical value.");
+			if (it != port.value().end()) throw BadUriException(ERR_NON_NUMERICAL_PORT.data());
 
 			std::uint16_t portNum = static_cast<std::uint16_t>(std::strtoul(port.value().c_str(), nullptr, 0));
 			this->m_port = portNum;
@@ -159,7 +168,7 @@ Uri::Uri(const std::string& uriString) {
 	}
 
 	if (path.empty() && !this->m_host.has_value()) 
-		throw std::invalid_argument("URI path component missing.");
+		throw BadUriException(ERR_PATH_COMPONENT_MISSING.data());
 
 	std::string tmp = path; // store the original path (with query string and/or fragment) for later
 	if (path.find('?') != std::string::npos) path = path.substr(0, path.find('?'));
