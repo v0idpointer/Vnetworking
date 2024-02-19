@@ -27,7 +27,11 @@ namespace Vnetworking::Http {
 
 	};
 
-	VNETHTTPAPI std::string ToString(const HttpMethod);
+	VNETHTTPAPI std::string ToString(const HttpMethod method);
+	VNETHTTPAPI HttpMethod ToMethod(const std::string& method);
+
+	VNETHTTPAPI HttpMethod RegisterHttpMethod(const std::string& text);
+	VNETHTTPAPI void UnregisterHttpMethod(const HttpMethod method);
 
 }
 
