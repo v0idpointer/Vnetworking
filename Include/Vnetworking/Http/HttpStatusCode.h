@@ -84,7 +84,12 @@ namespace Vnetworking::Http {
 	
 	};
 
-	VNETHTTPAPI std::string ToString(const HttpStatusCode status);
+	VNETHTTPAPI std::string ToString(const HttpStatusCode statusCode);
+    VNETHTTPAPI HttpStatusCode ToStatusCode(const std::uint32_t statusCode);
+    VNETHTTPAPI HttpStatusCode ToStatusCode(const std::string& statusCode);
+
+    VNETHTTPAPI HttpStatusCode RegisterHttpStatusCode(const std::uint32_t code, const std::string& text);
+    VNETHTTPAPI void UnregisterHttpStatusCode(const HttpStatusCode statusCode);
 
 }
 

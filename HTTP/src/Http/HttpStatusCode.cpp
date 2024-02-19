@@ -80,8 +80,72 @@ static const std::unordered_map<HttpStatusCode, std::string> s_statusCodes = {
 
 };
 
-std::string Vnetworking::Http::ToString(const HttpStatusCode status) {
-	if (!s_statusCodes.contains(status)) 
-		throw std::invalid_argument(std::format("{0} is not a valid HTTP status code.", static_cast<int>(status)));
-	return s_statusCodes.at(status);
+static std::unordered_map<HttpStatusCode, std::string> s_customStatusCodes = { };
+
+constexpr std::string_view ERR_BAD_STATUS = "HTTP {0} is not a valid status code.";
+constexpr std::string_view ERR_CANNOT_REREGISTER = "Cannot re-register an HTTP status code.";
+constexpr std::string_view ERR_ALREADY_REGISTERED = "HTTP {0} is already registered.";
+constexpr std::string_view ERR_CANNOT_UNREGISTER = "The specified HTTP status code cannot be unregistered.";
+constexpr std::string_view ERR_DOESNT_EXIST = "The specified HTTP status code does not exist.";
+
+std::string Vnetworking::Http::ToString(const HttpStatusCode statusCode) {
+
+	if (s_statusCodes.contains(statusCode))
+		return s_statusCodes.at(statusCode);
+
+	if (s_customStatusCodes.contains(statusCode))
+		return s_customStatusCodes.at(statusCode);
+
+	throw std::invalid_argument(std::format(ERR_BAD_STATUS, static_cast<int>(statusCode)));
+}
+
+HttpStatusCode Vnetworking::Http::ToStatusCode(const std::uint32_t statusCode) {
+
+	const HttpStatusCode status = static_cast<HttpStatusCode>(statusCode);
+	if (!s_statusCodes.contains(status) && !s_customStatusCodes.contains(status))
+		throw std::invalid_argument(std::format(ERR_BAD_STATUS, statusCode));
+
+	return status;
+}
+
+HttpStatusCode Vnetworking::Http::ToStatusCode(const std::string& statusCode) {
+
+	for (const auto& [key, val] : s_statusCodes) {
+		if (val == statusCode)
+			return key;
+	}
+
+	for (const auto& [key, val] : s_customStatusCodes) {
+		if (val == statusCode)
+			return key;
+	}
+
+	throw std::invalid_argument(ERR_DOESNT_EXIST.data());
+
+}
+
+HttpStatusCode Vnetworking::Http::RegisterHttpStatusCode(const std::uint32_t code, const std::string& text) {
+
+	HttpStatusCode statusCode = static_cast<HttpStatusCode>(code);
+
+	if (s_statusCodes.contains(statusCode))
+		throw std::invalid_argument(ERR_CANNOT_REREGISTER.data());
+
+	if (s_customStatusCodes.contains(statusCode))
+		throw std::invalid_argument(std::format(ERR_ALREADY_REGISTERED, code));
+
+	s_customStatusCodes.insert({ statusCode, text });
+	return statusCode;
+}
+
+void Vnetworking::Http::UnregisterHttpStatusCode(const HttpStatusCode statusCode) {
+
+	if (s_statusCodes.contains(statusCode))
+		throw std::invalid_argument(ERR_CANNOT_UNREGISTER.data());
+
+	if (!s_customStatusCodes.contains(statusCode))
+		throw std::invalid_argument(ERR_DOESNT_EXIST.data());
+
+	s_customStatusCodes.erase(statusCode);
+
 }
