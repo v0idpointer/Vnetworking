@@ -7,7 +7,6 @@
 #include <Vnetworking/Dns/DNS.h>
 #include <Vnetworking/Http/HttpMethod.h>
 #include <Vnetworking/Http/HttpStatusCode.h>
-#include <Vnetworking/Http/HttpVersion.h>
 #include <Vnetworking/Sockets/Socket.h>
 #include <Vnetworking/Sockets/IpSocketAddress.h>
 #include <Vnetworking/Sockets/SocketException.h>
