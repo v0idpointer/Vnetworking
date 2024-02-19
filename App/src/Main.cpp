@@ -7,6 +7,7 @@
 #include <Vnetworking/Dns/DNS.h>
 #include <Vnetworking/Http/HttpMethod.h>
 #include <Vnetworking/Http/HttpStatusCode.h>
+#include <Vnetworking/Http/HttpHeaders.h>
 #include <Vnetworking/Sockets/Socket.h>
 #include <Vnetworking/Sockets/IpSocketAddress.h>
 #include <Vnetworking/Sockets/SocketException.h>
@@ -34,14 +35,7 @@ static inline std::vector<std::uint8_t> ToByteBuffer(const std::string& str) noe
 
 int main(int argc, char* argv[]) {
 
-	try {
-		std::string str;
-		std::cin >> str;
-		std::cout << Uri(str).ToString() << "\n";
-	}
-	catch (const BadUriException& ex) {
-		std::cout << "*** BadUriException: " << ex.What() << "\n";
-	}
+	// ... 
 
 	return 0;
 }
