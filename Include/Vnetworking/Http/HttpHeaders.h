@@ -51,6 +51,9 @@ namespace Vnetworking::Http {
 		std::int32_t DeleteAllHeaders(std::string headerName);
 		void Clear(void);
 
+		static bool IsValidHeaderName(std::string headerName);
+		static bool IsValidHeaderValue(const std::string& headerValue);
+
 	};
 
 }

@@ -156,3 +156,37 @@ std::int32_t HttpHeaders::DeleteAllHeaders(std::string headerName) {
 void HttpHeaders::Clear() {
 	this->m_headers.clear();
 }
+
+bool HttpHeaders::IsValidHeaderName(std::string headerName) {
+
+	ToLowercase(headerName);
+
+	std::string::const_iterator it;
+	it = std::find_if(headerName.begin(), headerName.end(), [&] (const char ch) -> bool {
+
+		if ((ch >= 'A') && (ch <= 'Z')) return false;
+		if ((ch >= 'a') && (ch <= 'z')) return false;
+		if ((ch >= '0') && (ch <= '9')) return false;
+		if ((ch == '-') || (ch == '_')) return false;
+
+		return true;
+	});
+
+	return (it == headerName.end());
+}
+
+bool HttpHeaders::IsValidHeaderValue(const std::string& headerValue) {
+
+	std::string::const_iterator it;
+	const std::string allowedCharacters = R"(_ :;.,\/"'?!(){}[]@<>=-+*#$&`|~^%)";
+	it = std::find_if(headerValue.begin(), headerValue.end(), [&](const char ch) -> bool {
+
+		if ((ch >= 'A') && (ch <= 'Z')) return false;
+		if ((ch >= 'a') && (ch <= 'z')) return false;
+		if ((ch >= '0') && (ch <= '9')) return false;
+
+		return (allowedCharacters.find(ch) == std::string::npos);
+	});
+
+	return (it == headerValue.end());
+}

@@ -157,8 +157,10 @@
   <ItemGroup>
     <ClCompile Include="src\BadUriException.cpp" />
     <ClCompile Include="src\DllMain.cpp" />
+    <ClCompile Include="src\Http\HttpException.cpp" />
     <ClCompile Include="src\Http\HttpHeaders.cpp" />
     <ClCompile Include="src\Http\HttpMethod.cpp" />
+    <ClCompile Include="src\Http\HttpResponse.cpp" />
     <ClCompile Include="src\Http\HttpStatusCode.cpp" />
     <ClCompile Include="src\Uri.cpp" />
   </ItemGroup>
