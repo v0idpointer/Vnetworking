@@ -8,6 +8,7 @@
 #include <Vnetworking/Http/HttpMethod.h>
 #include <Vnetworking/Http/HttpStatusCode.h>
 #include <Vnetworking/Http/HttpHeaders.h>
+#include <Vnetworking/Http/HttpRequest.h>
 #include <Vnetworking/Http/HttpResponse.h>
 #include <Vnetworking/Http/HttpException.h>
 #include <Vnetworking/Sockets/Socket.h>

@@ -31,6 +31,8 @@ namespace Vnetworking::Http {
 		INVALID_HEADER_NAME = 2,
 		INVALID_HEADER_VALUE = 3,
 		INVALID_HTTP_VERSION = 4,
+		INVALID_METHOD = 5,
+		INVALID_REQUEST_URI = 6,
 	
 	};
 

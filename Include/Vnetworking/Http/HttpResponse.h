@@ -10,6 +10,7 @@
 #include <Vnetworking/Http/HttpStatusCode.h>
 #include <Vnetworking/Http/HttpHeaders.h>
 
+#include <string>
 #include <cstdint>
 #include <vector>
 #include <span>

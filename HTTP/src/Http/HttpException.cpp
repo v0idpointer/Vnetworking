@@ -21,6 +21,8 @@ static const std::unordered_map<HttpErrorSubtype, std::string> s_errorSubtypes =
 	{ HttpErrorSubtype::INVALID_HEADER_NAME, "Invalid HTTP header name." },
 	{ HttpErrorSubtype::INVALID_HEADER_VALUE, "Invalid HTTP header value." },
 	{ HttpErrorSubtype::INVALID_HTTP_VERSION, "Invalid and/or unsupported HTTP version." },
+	{ HttpErrorSubtype::INVALID_METHOD, "Invalid HTTP method." },
+	{ HttpErrorSubtype::INVALID_REQUEST_URI, "Bad request URI." },
 	
 };
 
