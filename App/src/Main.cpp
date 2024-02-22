@@ -11,6 +11,7 @@
 #include <Vnetworking/Http/HttpRequest.h>
 #include <Vnetworking/Http/HttpResponse.h>
 #include <Vnetworking/Http/HttpException.h>
+#include <Vnetworking/Http/HttpCookie.h>
 #include <Vnetworking/Sockets/Socket.h>
 #include <Vnetworking/Sockets/IpSocketAddress.h>
 #include <Vnetworking/Sockets/SocketException.h>
@@ -18,8 +19,6 @@
 #include <Vnetworking/Security/Certificates/Certificate.h>
 #include <Vnetworking/Security/SecureConnection.h>
 #include <Vnetworking/Security/SecurityContext.h>
-
-#include <Vnetworking/Http/HttpCookie.h>
 
 #pragma comment (lib, "Vnetcore.lib")
 #pragma comment (lib, "Vnethttp.lib")
@@ -40,13 +39,7 @@ static inline std::vector<std::uint8_t> ToByteBuffer(const std::string& str) noe
 
 int main(int argc, char* argv[]) {
 
-	HttpCookie cookie = { "SessionID", "7355608" };
-	cookie.SetExpirationDate(Date::Now() + std::chrono::days(7));
-	cookie.SetDomain("example.net");
-	cookie.SetPath("/api");
-	cookie.SetHttpOnly(true);
-
-	std::cout << cookie.ToString() << "\n";
+	// ... 
 
 	return 0;
 }
