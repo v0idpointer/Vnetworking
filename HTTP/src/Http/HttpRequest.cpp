@@ -166,6 +166,7 @@ HttpRequest HttpRequest::Parse(const std::span<const std::uint8_t>& data) {
 		throw HttpException(HttpErrorType::REQUEST_PARSING_ERROR, HttpErrorSubtype::INVALID_REQUEST_URI, ex.what());
 	}
 
+	httpRequest.SetRequestUri(uri);
 	path = reqstr.substr(0, pathEnd);
 	reqstr = reqstr.substr(pathEnd + 1);
 	requestLineEnd -= (path.length() + 1);
