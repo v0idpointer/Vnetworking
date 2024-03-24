@@ -57,6 +57,8 @@ namespace Vnetworking::Security::Certificates {
 		void ExportCertificate(std::vector<std::uint8_t>& buffer) const;
 		void ExportCertificate(const std::filesystem::path& path) const;
 
+		std::string GetThumbprint(void) const;
+
 	};
 
 }

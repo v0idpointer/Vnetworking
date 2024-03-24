@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <optional>
+#include <format>
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -355,4 +356,39 @@ void Certificate::ExportCertificate(const std::filesystem::path& path) const {
 
 	data.clear();
 
+}
+
+std::string Certificate::GetThumbprint() const {
+
+	PCCERT_CONTEXT pCertContext = reinterpret_cast<PCCERT_CONTEXT>(this->m_certificateContext);
+	DWORD len = 0;
+
+	BOOL result = CryptHashCertificate(
+		NULL,
+		CALG_SHA1,
+		NULL,
+		pCertContext->pbCertEncoded,
+		pCertContext->cbCertEncoded,
+		NULL,
+		&len
+	);
+
+	if (!result) throw SecurityException(static_cast<int>(GetLastError()));
+
+	std::vector<std::uint8_t> hash(len);
+	CryptHashCertificate(
+		NULL,
+		CALG_SHA1,
+		NULL,
+		pCertContext->pbCertEncoded,
+		pCertContext->cbCertEncoded,
+		hash.data(),
+		&len
+	);
+
+	std::ostringstream s;
+	for (std::size_t i = 0; i < hash.size(); ++i)
+		s << std::format("{0:02x}", hash[i]);
+
+	return s.str();
 }
