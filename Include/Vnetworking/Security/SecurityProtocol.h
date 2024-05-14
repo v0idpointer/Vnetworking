@@ -27,16 +27,18 @@ namespace Vnetworking::Security {
 		return static_cast<SecurityProtocol>(static_cast<std::int32_t>(a) | static_cast<std::int32_t>(b));
 	}
 
-	static inline SecurityProtocol operator|= (const SecurityProtocol a, const SecurityProtocol b) noexcept {
-		return (a | b);
+	static inline SecurityProtocol& operator|= (SecurityProtocol& a, const SecurityProtocol b) noexcept {
+		a = (a | b);
+		return a;
 	}
 
 	static inline SecurityProtocol operator& (const SecurityProtocol a, const SecurityProtocol b) noexcept {
 		return static_cast<SecurityProtocol>(static_cast<std::int32_t>(a) & static_cast<std::int32_t>(b));
 	}
 
-	static inline SecurityProtocol operator&= (const SecurityProtocol a, const SecurityProtocol b) noexcept {
-		return (a & b);
+	static inline SecurityProtocol& operator&= (SecurityProtocol& a, const SecurityProtocol b) noexcept {
+		a = (a & b);
+		return a;
 	}
 
 	static inline SecurityProtocol operator~ (const SecurityProtocol a) noexcept {

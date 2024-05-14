@@ -25,16 +25,18 @@ namespace Vnetworking::Sockets {
 		return static_cast<SocketFlags>(static_cast<std::int32_t>(a) | static_cast<std::int32_t>(b));
 	}
 
-	static inline SocketFlags operator|= (const SocketFlags a, const SocketFlags b) noexcept {
-		return (a | b);
+	static inline SocketFlags& operator|= (SocketFlags& a, const SocketFlags b) noexcept {
+		a = (a | b);
+		return a;
 	}
 
 	static inline SocketFlags operator& (const SocketFlags a, const SocketFlags b) noexcept {
 		return static_cast<SocketFlags>(static_cast<std::int32_t>(a) & static_cast<std::int32_t>(b));
 	}
 
-	static inline SocketFlags operator&= (const SocketFlags a, const SocketFlags b) noexcept {
-		return (a & b);
+	static inline SocketFlags& operator&= (SocketFlags& a, const SocketFlags b) noexcept {
+		a = (a & b);
+		return a;
 	}
 
 	static inline SocketFlags operator~ (const SocketFlags a) noexcept {

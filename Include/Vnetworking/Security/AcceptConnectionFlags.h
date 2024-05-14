@@ -23,16 +23,18 @@ namespace Vnetworking::Security {
 		return static_cast<AcceptConnectionFlags>(static_cast<std::int32_t>(a) | static_cast<std::int32_t>(b));
 	}
 
-	static inline AcceptConnectionFlags operator|= (const AcceptConnectionFlags a, const AcceptConnectionFlags b) noexcept {
-		return (a | b);
+	static inline AcceptConnectionFlags& operator|= (AcceptConnectionFlags& a, const AcceptConnectionFlags b) noexcept {
+		a = (a | b);
+		return a;
 	}
 
 	static inline AcceptConnectionFlags operator& (const AcceptConnectionFlags a, const AcceptConnectionFlags b) noexcept {
 		return static_cast<AcceptConnectionFlags>(static_cast<std::int32_t>(a) & static_cast<std::int32_t>(b));
 	}
 
-	static inline AcceptConnectionFlags operator&= (const AcceptConnectionFlags a, const AcceptConnectionFlags b) noexcept {
-		return (a & b);
+	static inline AcceptConnectionFlags& operator&= (AcceptConnectionFlags& a, const AcceptConnectionFlags b) noexcept {
+		a = (a & b);
+		return a;
 	}
 
 	static inline AcceptConnectionFlags operator~ (const AcceptConnectionFlags a) noexcept {
